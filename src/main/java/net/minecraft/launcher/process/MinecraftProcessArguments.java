@@ -17,8 +17,8 @@ public enum MinecraftProcessArguments
   public String formatAuthResponse(Response response)
   {
     if (useUuid) {
-      return String.format(format, new Object[] { response.getName(), response.getSessionId(), response.getUUID() });
+      return String.format(format, new Object[] { response.getPlayerName(), response.getSessionId(), response.getUUID() });
     }
-    return String.format(format, new Object[] { response.getName(), response.getSessionId() });
+    return String.format(format, new Object[] { response.getPlayerName(), response.getSessionId() });
   }
 }

@@ -29,6 +29,8 @@ import net.minecraft.launcher.process.JavaProcessLauncher;
 import net.minecraft.launcher.process.JavaProcessRunnable;
 import net.minecraft.launcher.process.LimitedCapacityList;
 import net.minecraft.launcher.process.MinecraftProcessArguments;
+import net.minecraft.launcher.profile.Profile;
+import net.minecraft.launcher.profile.ProfileManager;
 import net.minecraft.launcher.ui.LauncherPanel;
 import net.minecraft.launcher.ui.SidebarPanel;
 import net.minecraft.launcher.ui.sidebar.VersionSelection;
@@ -152,6 +154,7 @@ public class GameLauncher
 
   protected void launchGame() {
     launcher.println("Launching game");
+    Profile selectedProfile = launcher.getProfileManager().getSelectedProfile();
 
     nativeDir = new File(launcher.getWorkingDirectory(), "versions/" + version.getId() + "/" + version.getId() + "-natives-" + System.nanoTime());
     if (!nativeDir.isDirectory()) nativeDir.mkdirs();
@@ -163,23 +166,30 @@ public class GameLauncher
       return;
     }
 
-    Launcher.getInstance().println("Launching!");
-    JavaProcessLauncher processLauncher = new JavaProcessLauncher(new String[0]);
-    processLauncher.directory(launcher.getWorkingDirectory());
+    File gameDirectory = selectedProfile.getGameDir() == null ? launcher.getWorkingDirectory() : selectedProfile.getGameDir();
+    Launcher.getInstance().println("Launching in " + gameDirectory);
+    JavaProcessLauncher processLauncher = new JavaProcessLauncher(selectedProfile.getJavaPath(), new String[0]);
+    processLauncher.directory(gameDirectory);
 
     if (OperatingSystem.getCurrentPlatform().equals(OperatingSystem.OSX)) {
-      Launcher.getInstance().println(launcher.getWorkingDirectory().getAbsolutePath());
       processLauncher.addCommands(new String[] { "-Xdock:icon=assets/icons/icon_32x32.png", "-Xdock:name=Minecraft" });
     }
 
-    processLauncher.addCommands(new String[] { "-Xmx1G" });
+    List<String> profileArgs = selectedProfile.getJvmArgs();
+
+    if (profileArgs != null)
+      processLauncher.addCommands((String[])profileArgs.toArray(new String[profileArgs.size()]));
+    else {
+      processLauncher.addCommands(new String[] { "-Xmx1G" });
+    }
+
     processLauncher.addCommands(new String[] { "-Djava.library.path=" + nativeDir.getAbsolutePath() });
     processLauncher.addCommands(new String[] { "-cp", constructClassPath(version) });
     processLauncher.addCommands(new String[] { version.getMainClass() });
 
     Response loginResponse = launcher.getAuthentication().getLastSuccessfulResponse();
 
-    if ((version.getProcessArguments() != null) && (loginResponse != null) && (loginResponse.getName() != null) && (loginResponse.getSessionId() != null) && (loginResponse.getUUID() != null)) {
+    if ((version.getProcessArguments() != null) && (loginResponse != null) && (loginResponse.getPlayerName() != null) && (loginResponse.getSessionId() != null) && (loginResponse.getUUID() != null)) {
       processLauncher.addCommands(version.getProcessArguments().formatAuthResponse(loginResponse).split(" "));
     }
 
@@ -195,7 +205,7 @@ public class GameLauncher
       }
     }
 
-    processLauncher.addCommands(new String[] { "--workDir", launcher.getWorkingDirectory().getAbsolutePath() });
+    processLauncher.addCommands(new String[] { "--workDir", gameDirectory.getAbsolutePath() });
 
     processLauncher.addCommands(launcher.getAdditionalArgs());
     try

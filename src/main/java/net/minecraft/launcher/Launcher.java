@@ -16,6 +16,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ThreadPoolExecutor;
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
@@ -24,10 +25,11 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import net.minecraft.launcher.authentication.OldAuthentication;
 import net.minecraft.launcher.authentication.OldAuthentication.StoredDetails;
+import net.minecraft.launcher.profile.Profile;
+import net.minecraft.launcher.profile.ProfileManager;
 import net.minecraft.launcher.ui.LauncherPanel;
 import net.minecraft.launcher.ui.SidebarPanel;
 import net.minecraft.launcher.ui.sidebar.login.LoginContainerForm;
@@ -46,13 +48,14 @@ public class Launcher
   private final VersionManager versionManager;
   private final JFrame frame;
   private final LauncherPanel launcherPanel;
-  private final GameLauncher gameLauncher = new GameLauncher(this);
+  private final GameLauncher gameLauncher;
   private final File workingDirectory;
   private final Proxy proxy;
   private final PasswordAuthentication proxyAuth;
   private final String[] additionalArgs;
   private final OldAuthentication authentication;
   private final Integer bootstrapVersion;
+  private final ProfileManager profileManager;
 
   public Launcher(JFrame frame, File workingDirectory, Proxy proxy, PasswordAuthentication proxyAuth, String[] args)
   {
@@ -69,7 +72,9 @@ public class Launcher
     additionalArgs = args;
     this.workingDirectory = workingDirectory;
     this.frame = frame;
-    authentication = new OldAuthentication(proxy);
+    gameLauncher = new GameLauncher(this);
+    profileManager = new ProfileManager(this);
+    authentication = new OldAuthentication(this, proxy);
     versionManager = new VersionManager(new LocalVersionList(workingDirectory), new RemoteVersionList(proxy));
     launcherPanel = new LauncherPanel(this);
 
@@ -85,8 +90,8 @@ public class Launcher
     }
 
     downloadResources();
+    refreshProfiles();
     refreshVersions();
-    loadLastLogin();
 
     println("Launcher " + LauncherConstants.VERSION_NAME + " (through bootstrap " + bootstrapVersion + ") started on " + OperatingSystem.getCurrentPlatform().getName() + "...");
 
@@ -177,28 +182,58 @@ public class Launcher
     });
   }
 
-  public void loadLastLogin() {
+  public void refreshProfiles() {
     versionManager.getExecutorService().submit(new Runnable()
     {
       public void run() {
-        final StoredDetails result = authentication.getStoredDetails(new File(workingDirectory, "lastlogin"));
+        try {
+          if (!profileManager.loadProfiles()) {
+            OldAuthentication.StoredDetails result = authentication.getStoredDetails();
 
-        if (result != null)
-          SwingUtilities.invokeLater(new Runnable()
-          {
-            public void run() {
-              NotLoggedInForm form = launcherPanel.getSidebar().getLoginForm().getNotLoggedInForm();
-              form.getUsernameField().setText(result.getUsername());
-              form.getPasswordField().setText(result.getPassword());
-              form.tryLogIn(false, false);
+            if (result != null) {
+              result = new OldAuthentication.StoredDetails(result.getUsername(), null, result.getDisplayName());
+              Profile profile = profileManager.getSelectedProfile();
+              profile.setAuthentication(result);
+              profileManager.saveProfiles();
+
+              println("Initialized default profile with old lastlogin details");
+            } else {
+              println("Created default profile with no authentication details");
             }
-          });
+          } else {
+            println("Loaded " + profileManager.getProfiles().size() + " profile(s); selected '" + profileManager.getSelectedProfile().getName() + "'");
+          }
+        } catch (Throwable e) {
+          Launcher.getInstance().println("Unexpected exception refreshing profile list", e);
+        }
+        try
+        {
+          Profile profile = profileManager.getSelectedProfile();
+
+          if (profile.getAuthentication() != null) {
+            String username = profile.getAuthentication().getUsername();
+
+            if ((username != null) && (username.length() > 0)) {
+              NotLoggedInForm form = launcherPanel.getSidebar().getLoginForm().getNotLoggedInForm();
+              form.getUsernameField().setText(username);
+              String password = authentication.guessPasswordFromSillyOldFormat(username);
+
+              if ((password != null) && (password.length() > 0)) {
+                println("Going to log in with legacy stored username & password...");
+
+                form.getPasswordField().setText(password);
+                form.tryLogIn(false, false);
+              }
+            }
+          }
+        } catch (Throwable e) {
+          Launcher.getInstance().println("Unexpected exception logging in with stored credentials", e);
+        }
       }
     });
   }
 
-  protected void initializeFrame()
-  {
+  protected void initializeFrame() {
     frame.getContentPane().removeAll();
     frame.setTitle("Minecraft Launcher " + LauncherConstants.VERSION_NAME);
     frame.setPreferredSize(new Dimension(925, 525));
@@ -305,5 +340,9 @@ public class Launcher
 
   public static Launcher getInstance() {
     return instance;
+  }
+
+  public ProfileManager getProfileManager() {
+    return profileManager;
   }
 }

@@ -2,9 +2,9 @@ package net.minecraft.launcher.ui.sidebar.login;
 
 import java.awt.event.ActionListener;
 import net.minecraft.launcher.Launcher;
+import net.minecraft.launcher.events.RefreshedVersionsListener;
 import net.minecraft.launcher.ui.sidebar.SidebarGridForm;
 import net.minecraft.launcher.updater.VersionManager;
-import net.minecraft.launcher.updater.events.RefreshedVersionsListener;
 
 public abstract class BaseLogInForm extends SidebarGridForm
   implements ActionListener, RefreshedVersionsListener

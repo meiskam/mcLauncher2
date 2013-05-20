@@ -15,9 +15,11 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.plaf.basic.BasicComboBoxRenderer;
 import net.minecraft.launcher.Launcher;
+import net.minecraft.launcher.events.RefreshedVersionsListener;
+import net.minecraft.launcher.profile.Profile;
+import net.minecraft.launcher.profile.ProfileManager;
 import net.minecraft.launcher.updater.VersionManager;
 import net.minecraft.launcher.updater.VersionSyncInfo;
-import net.minecraft.launcher.updater.events.RefreshedVersionsListener;
 import net.minecraft.launcher.versions.ReleaseType;
 import net.minecraft.launcher.versions.Version;
 
@@ -91,9 +93,13 @@ public class VersionSelection extends SidebarGridForm
     VersionSyncInfo previous = getSelectedVersion();
     versionList.removeAllItems();
     VersionSyncInfo selected = null;
+    Profile profile = launcher.getProfileManager().getSelectedProfile();
+    String previousId = previous != null ? previous.getLatestVersion().getId() : profile.getLastVersionId();
 
     for (VersionSyncInfo version : versions) {
-      if ((previous != null) && (version.getLatestVersion().getId().equals(previous.getLatestVersion().getId()))) {
+      String id = version.getLatestVersion().getId();
+
+      if (id.equals(previousId)) {
         selected = version;
       }
 

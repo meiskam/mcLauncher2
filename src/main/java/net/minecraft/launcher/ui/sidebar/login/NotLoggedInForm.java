@@ -5,6 +5,7 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -22,6 +23,9 @@ import net.minecraft.launcher.LauncherConstants;
 import net.minecraft.launcher.OperatingSystem;
 import net.minecraft.launcher.authentication.OldAuthentication;
 import net.minecraft.launcher.authentication.OldAuthentication.Response;
+import net.minecraft.launcher.authentication.OldAuthentication.StoredDetails;
+import net.minecraft.launcher.profile.Profile;
+import net.minecraft.launcher.profile.ProfileManager;
 import net.minecraft.launcher.ui.popups.ErrorMessagePopup;
 import net.minecraft.launcher.updater.VersionManager;
 
@@ -136,13 +140,15 @@ public class NotLoggedInForm extends BaseLogInForm
             NotLoggedInForm.this.loginFailed(response.getErrorMessage(), verbose);
           } else if (response.getSessionId() == null) {
             NotLoggedInForm.this.loginFailed("Could not log in: SessionID was null?", verbose);
-          } else if (response.getName() == null) {
+          } else if (response.getPlayerName() == null) {
             NotLoggedInForm.this.loginFailed("Could not log in: Name was null?", verbose);
           } else if (response.getUUID() == null) {
             NotLoggedInForm.this.loginFailed("Could not log in: UUID was null?", verbose);
           } else {
             getLauncher().println("Logged in successfully");
             getLauncher().getAuthentication().setAuthenticating(false);
+
+            NotLoggedInForm.this.saveAuthenticationDetails();
 
             if (launchOnSuccess)
               getLauncher().getGameLauncher().playGame();
@@ -155,6 +161,19 @@ public class NotLoggedInForm extends BaseLogInForm
         }
       }
     });
+  }
+
+  private void saveAuthenticationDetails() {
+    OldAuthentication.Response response = getLauncher().getAuthentication().getLastSuccessfulResponse();
+    if ((response == null) || (response.getUsername() == null)) return;
+
+    getLauncher().getProfileManager().getSelectedProfile().setAuthentication(new OldAuthentication.StoredDetails(response.getUsername(), null, response.getPlayerName()));
+    try
+    {
+      getLauncher().getProfileManager().saveProfiles();
+    } catch (IOException e) {
+      getLauncher().println("Couldn't save authentication details to profile", e);
+    }
   }
 
   private void loginFailed(String error, boolean verbose) {

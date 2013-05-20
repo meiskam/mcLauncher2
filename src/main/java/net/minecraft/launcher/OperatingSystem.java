@@ -1,5 +1,6 @@
 package net.minecraft.launcher;
 
+import java.io.File;
 import java.lang.reflect.Method;
 import java.net.URI;
 
@@ -27,6 +28,18 @@ public enum OperatingSystem
 
   public boolean isSupported() {
     return this != UNKNOWN;
+  }
+
+  public String getJavaDir() {
+    String separator = System.getProperty("file.separator");
+    String path = System.getProperty("java.home") + separator + "bin" + separator;
+
+    if ((getCurrentPlatform() == WINDOWS) && 
+      (new File(path + "javaw.exe").isFile())) {
+      return path + "javaw.exe";
+    }
+
+    return path + "java";
   }
 
   public static OperatingSystem getCurrentPlatform() {

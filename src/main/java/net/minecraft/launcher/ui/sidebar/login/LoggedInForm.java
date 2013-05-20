@@ -65,7 +65,7 @@ public class LoggedInForm extends BaseLogInForm
     }
 
     if (response != null)
-      welcomeText.setText("<html>Welcome, <b>" + authentication.getLastSuccessfulResponse().getName() + "</b>!</html>");
+      welcomeText.setText("<html>Welcome, <b>" + authentication.getLastSuccessfulResponse().getPlayerName() + "</b>!</html>");
     else {
       welcomeText.setText("<html>Welcome, guest!</html>");
     }

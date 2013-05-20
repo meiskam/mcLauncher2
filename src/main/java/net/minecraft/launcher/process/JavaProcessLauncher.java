@@ -5,16 +5,18 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import net.minecraft.launcher.OperatingSystem;
 
 public class JavaProcessLauncher
 {
-  private static final String PATH_SEPARATOR = System.getProperty("file.separator");
-  private static final String JAVA_PATH = System.getProperty("java.home") + PATH_SEPARATOR + "bin" + PATH_SEPARATOR;
-  private List<String> commands;
+  private final String jvmPath;
+  private final List<String> commands;
   private File directory;
 
-  public JavaProcessLauncher(String[] commands)
+  public JavaProcessLauncher(String jvmPath, String[] commands)
   {
+    if (jvmPath == null) jvmPath = OperatingSystem.getCurrentPlatform().getJavaDir();
+    this.jvmPath = jvmPath;
     this.commands = new ArrayList<String>(commands.length);
     addCommands(commands);
   }
@@ -80,11 +82,11 @@ public class JavaProcessLauncher
   }
 
   protected String getJavaPath() {
-    return JAVA_PATH + "java";
+    return jvmPath;
   }
 
   public String toString()
   {
-    return "JavaProcessLauncher[commands=" + commands + ", java=" + JAVA_PATH + "]";
+    return "JavaProcessLauncher[commands=" + commands + ", java=" + jvmPath + "]";
   }
 }

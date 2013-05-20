@@ -14,7 +14,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import javax.swing.SwingUtilities;
 import javax.xml.parsers.DocumentBuilder;
@@ -22,9 +21,9 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import net.minecraft.launcher.Launcher;
 import net.minecraft.launcher.LauncherConstants;
 import net.minecraft.launcher.OperatingSystem;
+import net.minecraft.launcher.events.RefreshedVersionsListener;
 import net.minecraft.launcher.updater.download.DownloadJob;
 import net.minecraft.launcher.updater.download.Downloadable;
-import net.minecraft.launcher.updater.events.RefreshedVersionsListener;
 import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.ReleaseType;
 import net.minecraft.launcher.versions.Version;
@@ -37,7 +36,7 @@ public class VersionManager
 {
   private final VersionList localVersionList;
   private final VersionList remoteVersionList;
-  private final ThreadPoolExecutor executorService = (ThreadPoolExecutor)Executors.newFixedThreadPool(8);
+  private final ThreadPoolExecutor executorService = new ExceptionalThreadPoolExecutor(8);
   private final List<RefreshedVersionsListener> refreshedVersionsListeners = Collections.synchronizedList(new ArrayList<RefreshedVersionsListener>());
   private final Object refreshLock = new Object();
   private boolean isRefreshing = false;

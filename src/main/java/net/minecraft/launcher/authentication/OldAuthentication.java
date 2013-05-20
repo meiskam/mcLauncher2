@@ -22,10 +22,12 @@ import net.minecraft.launcher.LauncherConstants;
 public class OldAuthentication
 {
   private final Proxy proxy;
+  private final File lastLoginFile;
   private Response lastSuccessfulResponse;
   private boolean isAuthenticating = false;
 
-  public OldAuthentication(Proxy proxy) {
+  public OldAuthentication(Launcher launcher, Proxy proxy) {
+    lastLoginFile = new File(launcher.getWorkingDirectory(), "lastlogin");
     this.proxy = proxy;
   }
 
@@ -38,26 +40,29 @@ public class OldAuthentication
     String[] split = response.split(":");
 
     if (split.length == 5) {
-      lastSuccessfulResponse = new Response(null, split[3], split[2], split[4]);
+      lastSuccessfulResponse = new Response(username, null, split[3], split[2], split[4]);
       return lastSuccessfulResponse;
     }
-    return new Response(response, null, null, null);
+    return new Response(username, response, null, null, null);
   }
 
-  public StoredDetails getStoredDetails(File file)
+  public StoredDetails getStoredDetails()
   {
-    if (!file.isFile()) return null;
+    if (!lastLoginFile.isFile()) return null;
     try
     {
       Cipher cipher = getCipher(2, "passwordfile");
       DataInputStream dis;
       if (cipher != null)
-        dis = new DataInputStream(new CipherInputStream(new FileInputStream(file), cipher));
+        dis = new DataInputStream(new CipherInputStream(new FileInputStream(lastLoginFile), cipher));
       else {
-        dis = new DataInputStream(new FileInputStream(file));
+        dis = new DataInputStream(new FileInputStream(lastLoginFile));
       }
 
-      StoredDetails result = new StoredDetails(dis.readUTF(), dis.readUTF());
+      String username = dis.readUTF();
+      String password = dis.readUTF();
+      String displayName = username.length() > 0 ? username.split("@")[0] : "";
+      StoredDetails result = new StoredDetails(username, password, displayName);
       dis.close();
       return result;
     } catch (Exception e) {
@@ -65,8 +70,19 @@ public class OldAuthentication
     }return null;
   }
 
-  private Cipher getCipher(int mode, String password) throws Exception
+  public String guessPasswordFromSillyOldFormat(String username)
   {
+    StoredDetails details = getStoredDetails();
+
+    if ((details != null) && 
+      (details.getUsername().equals(username))) {
+      return details.getPassword();
+    }
+
+    return null;
+  }
+
+  private Cipher getCipher(int mode, String password) throws Exception {
     Random random = new Random(43287234L);
     byte[] salt = new byte[8];
     random.nextBytes(salt);
@@ -96,17 +112,23 @@ public class OldAuthentication
 
   public static class Response
   {
+    private final String username;
     private final String errorMessage;
     private final String sessionId;
-    private final String name;
+    private final String playerName;
     private final String uuid;
 
-    public Response(String errorMessage, String sessionId, String name, String uuid)
+    public Response(String username, String errorMessage, String sessionId, String playerName, String uuid)
     {
+      this.username = username;
       this.errorMessage = errorMessage;
       this.sessionId = sessionId;
-      this.name = name;
+      this.playerName = playerName;
       this.uuid = uuid;
+    }
+
+    public String getUsername() {
+      return username;
     }
 
     public String getErrorMessage() {
@@ -117,8 +139,8 @@ public class OldAuthentication
       return sessionId;
     }
 
-    public String getName() {
-      return name;
+    public String getPlayerName() {
+      return playerName;
     }
 
     public String getUUID() {
@@ -130,11 +152,13 @@ public class OldAuthentication
   {
     private final String username;
     private final String password;
+    private final String displayName;
 
-    public StoredDetails(String username, String password)
+    public StoredDetails(String username, String password, String displayName)
     {
       this.username = username;
       this.password = password;
+      this.displayName = displayName;
     }
 
     public String getUsername() {
@@ -143,6 +167,10 @@ public class OldAuthentication
 
     public String getPassword() {
       return password;
+    }
+
+    public String getDisplayName() {
+      return displayName;
     }
   }
 }

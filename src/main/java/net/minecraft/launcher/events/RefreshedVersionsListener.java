@@ -1,4 +1,4 @@
-package net.minecraft.launcher.updater.events;
+package net.minecraft.launcher.events;
 
 import net.minecraft.launcher.updater.VersionManager;
 

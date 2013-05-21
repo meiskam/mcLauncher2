@@ -37,8 +37,6 @@ import net.minecraft.launcher.ui.sidebar.VersionSelection;
 import net.minecraft.launcher.ui.sidebar.login.LoginContainerForm;
 import net.minecraft.launcher.ui.tabs.CrashReportTab;
 import net.minecraft.launcher.ui.tabs.LauncherTabPanel;
-import net.minecraft.launcher.updater.LocalVersionList;
-import net.minecraft.launcher.updater.VersionList;
 import net.minecraft.launcher.updater.VersionManager;
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import net.minecraft.launcher.updater.download.DownloadJob;
@@ -129,17 +127,6 @@ public class GameLauncher
       }
       try
       {
-        VersionList localVersionList = launcher.getVersionManager().getLocalVersionList();
-        if ((localVersionList instanceof LocalVersionList))
-          ((LocalVersionList)localVersionList).saveVersion(version);
-      }
-      catch (IOException e) {
-        Launcher.getInstance().println("Couldn't save version info for " + syncInfo.getLatestVersion(), e);
-        setWorking(false);
-        return;
-      }
-      try
-      {
         DownloadJob job = new DownloadJob("Version & Libraries", false, this);
         addJob(job);
         launcher.getVersionManager().downloadVersion(syncInfo, job);
@@ -172,7 +159,7 @@ public class GameLauncher
     processLauncher.directory(gameDirectory);
 
     if (OperatingSystem.getCurrentPlatform().equals(OperatingSystem.OSX)) {
-      processLauncher.addCommands(new String[] { "-Xdock:icon=assets/icons/icon_32x32.png", "-Xdock:name=Minecraft" });
+      processLauncher.addCommands(new String[] { "-Xdock:icon=assets/icons/minecraft.icns", "-Xdock:name=Minecraft" });
     }
 
     List<String> profileArgs = selectedProfile.getJvmArgs();

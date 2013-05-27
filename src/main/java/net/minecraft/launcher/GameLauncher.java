@@ -37,6 +37,8 @@ import net.minecraft.launcher.ui.sidebar.VersionSelection;
 import net.minecraft.launcher.ui.sidebar.login.LoginContainerForm;
 import net.minecraft.launcher.ui.tabs.CrashReportTab;
 import net.minecraft.launcher.ui.tabs.LauncherTabPanel;
+import net.minecraft.launcher.updater.LocalVersionList;
+import net.minecraft.launcher.updater.VersionList;
 import net.minecraft.launcher.updater.VersionManager;
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import net.minecraft.launcher.updater.download.DownloadJob;
@@ -124,6 +126,20 @@ public class GameLauncher
         Launcher.getInstance().println("Couldn't get complete version info for " + syncInfo.getLatestVersion(), e);
         setWorking(false);
         return;
+      }
+
+      if (!syncInfo.isInstalled()) {
+        try {
+          VersionList localVersionList = launcher.getVersionManager().getLocalVersionList();
+          if ((localVersionList instanceof LocalVersionList)) {
+            ((LocalVersionList)localVersionList).saveVersion(version);
+            Launcher.getInstance().println("Installed " + syncInfo.getLatestVersion());
+          }
+        } catch (IOException e) {
+          Launcher.getInstance().println("Couldn't save version info to install " + syncInfo.getLatestVersion(), e);
+          setWorking(false);
+          return;
+        }
       }
       try
       {

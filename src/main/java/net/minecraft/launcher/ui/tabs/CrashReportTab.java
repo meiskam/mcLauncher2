@@ -19,9 +19,11 @@ import net.minecraft.launcher.Http;
 import net.minecraft.launcher.Launcher;
 import net.minecraft.launcher.LauncherConstants;
 import net.minecraft.launcher.OperatingSystem;
+import net.minecraft.launcher.versions.CompleteVersion;
 
 public class CrashReportTab extends JPanel
 {
+  private final CompleteVersion version;
   private final File reportFile;
   private final String report;
   private final JEditorPane reportEditor = new JEditorPane();
@@ -29,10 +31,10 @@ public class CrashReportTab extends JPanel
   private final CrashInfoPane crashInfoPane = new CrashInfoPane();
   private final boolean isModded;
 
-  public CrashReportTab(File reportFile, String report)
+  public CrashReportTab(CompleteVersion version, File reportFile, String report)
   {
     super(true);
-
+    this.version = version;
     this.reportFile = reportFile;
     this.report = report;
 
@@ -130,6 +132,10 @@ public class CrashReportTab extends JPanel
       result.append(LauncherConstants.VERSION_NAME);
       result.append(" (bootstrap ");
       result.append(Launcher.getInstance().getBootstrapVersion());
+      result.append(")\nMinecraft: ");
+      result.append(version.getId());
+      result.append(" (updated ");
+      result.append(version.getUpdatedTime());
       result.append(")");
 
       return result.toString();

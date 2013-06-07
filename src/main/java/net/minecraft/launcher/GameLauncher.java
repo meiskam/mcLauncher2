@@ -193,7 +193,7 @@ public class GameLauncher
     Response loginResponse = launcher.getAuthentication().getLastSuccessfulResponse();
 
     if ((version.getProcessArguments() != null) && (loginResponse != null) && (loginResponse.getPlayerName() != null) && (loginResponse.getSessionId() != null) && (loginResponse.getUUID() != null)) {
-      processLauncher.addCommands(version.getProcessArguments().formatAuthResponse(loginResponse).split(" "));
+      processLauncher.addCommands(version.getProcessArguments().formatAuthResponse(loginResponse, version.getId()).split(" "));
     }
 
     Proxy proxy = launcher.getProxy();
@@ -333,7 +333,7 @@ public class GameLauncher
 
             reader.close();
 
-            launcher.getLauncherPanel().getTabPanel().setCrashReport(new CrashReportTab(file, result.toString()));
+            launcher.getLauncherPanel().getTabPanel().setCrashReport(new CrashReportTab(version, file, result.toString()));
           } catch (IOException e) {
             Launcher.getInstance().println("Couldn't open crash report", e);
           } finally {

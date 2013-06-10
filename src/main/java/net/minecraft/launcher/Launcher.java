@@ -23,17 +23,12 @@ import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JPasswordField;
-import javax.swing.JTextField;
 import javax.swing.UIManager;
 import net.minecraft.launcher.authentication.OldAuthentication;
 import net.minecraft.launcher.authentication.OldAuthentication.StoredDetails;
 import net.minecraft.launcher.profile.Profile;
 import net.minecraft.launcher.profile.ProfileManager;
 import net.minecraft.launcher.ui.LauncherPanel;
-import net.minecraft.launcher.ui.SidebarPanel;
-import net.minecraft.launcher.ui.sidebar.login.LoginContainerForm;
-import net.minecraft.launcher.ui.sidebar.login.NotLoggedInForm;
 import net.minecraft.launcher.ui.tabs.ConsoleTab;
 import net.minecraft.launcher.ui.tabs.LauncherTabPanel;
 import net.minecraft.launcher.updater.LocalVersionList;
@@ -191,10 +186,11 @@ public class Launcher
             OldAuthentication.StoredDetails result = authentication.getStoredDetails();
 
             if (result != null) {
-              result = new OldAuthentication.StoredDetails(result.getUsername(), null, result.getDisplayName());
+              result = new OldAuthentication.StoredDetails(result.getUsername(), null, result.getDisplayName(), result.getUUID());
               Profile profile = profileManager.getSelectedProfile();
               profile.setAuthentication(result);
               profileManager.saveProfiles();
+              profileManager.fireRefreshEvent();
 
               println("Initialized default profile with old lastlogin details");
             } else {
@@ -205,29 +201,6 @@ public class Launcher
           }
         } catch (Throwable e) {
           Launcher.getInstance().println("Unexpected exception refreshing profile list", e);
-        }
-        try
-        {
-          Profile profile = profileManager.getSelectedProfile();
-
-          if (profile.getAuthentication() != null) {
-            String username = profile.getAuthentication().getUsername();
-
-            if ((username != null) && (username.length() > 0)) {
-              NotLoggedInForm form = launcherPanel.getSidebar().getLoginForm().getNotLoggedInForm();
-              form.getUsernameField().setText(username);
-              String password = authentication.guessPasswordFromSillyOldFormat(username);
-
-              if ((password != null) && (password.length() > 0)) {
-                println("Going to log in with legacy stored username & password...");
-
-                form.getPasswordField().setText(password);
-                form.tryLogIn(false, false);
-              }
-            }
-          }
-        } catch (Throwable e) {
-          Launcher.getInstance().println("Unexpected exception logging in with stored credentials", e);
         }
       }
     });

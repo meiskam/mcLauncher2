@@ -25,6 +25,7 @@ public class LauncherTabPanel extends JTabbedPane
   protected void createInterface() {
     addTab("Update Notes", blog);
     addTab("Development Console", console);
+    addTab("Profile Editor", new ProfileListTab(launcher));
     addTab("Local Version Editor (NYI)", new VersionListTab(launcher));
   }
 

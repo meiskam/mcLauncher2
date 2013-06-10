@@ -36,8 +36,18 @@ public class JavaProcessLauncher
     return commands;
   }
 
+  public void addEscapedCommand(String command) {
+    commands.add(escapeArgument(command));
+  }
+
   public void addCommands(String[] commands) {
-    this.commands.addAll(Arrays.asList(commands));
+    List args = Arrays.asList(commands);
+
+    for (int i = 1; i < args.size(); i++) {
+      args.set(i, escapeArgument((String)args.get(i)));
+    }
+
+    this.commands.addAll(args);
   }
 
   public JavaProcessLauncher directory(File directory) {
@@ -50,6 +60,28 @@ public class JavaProcessLauncher
     return directory;
   }
 
+  public static String escapeArgument(String input) {
+    String result = "";
+
+    if ((input.indexOf(' ') >= 0) || (input.indexOf('\t') >= 0) || (input.indexOf("*") > 0)) {
+      if (input.charAt(0) != '"') {
+        result = result + "\"";
+        result = result + input;
+        if (input.endsWith("\\")) {
+          result = result + "\\";
+        }
+        result = result + "\"";
+      } else if (input.endsWith("\"")) {
+        result = result + input;
+      } else {
+        throw new IllegalArgumentException("Illegal unmatched quote in commands");
+      }
+    }
+    else result = input;
+
+    return result;
+  }
+
   public static String buildCommands(List<String> commands) {
     StringBuilder builder = new StringBuilder(80);
 
@@ -58,24 +90,7 @@ public class JavaProcessLauncher
         builder.append(' ');
       }
 
-      String part = (String)commands.get(i);
-
-      if ((part.indexOf(' ') >= 0) || (part.indexOf('\t') >= 0) || (part.indexOf("*") > 0)) {
-        if (part.charAt(0) != '"') {
-          builder.append('"');
-          builder.append(part);
-          if (part.endsWith("\\")) {
-            builder.append("\\");
-          }
-          builder.append('"');
-        } else if (part.endsWith("\"")) {
-          builder.append(part);
-        } else {
-          throw new IllegalArgumentException("Illegal unmatched quote in commands");
-        }
-      }
-      else builder.append(part);
-
+      builder.append((String)commands.get(i));
     }
 
     return builder.toString();

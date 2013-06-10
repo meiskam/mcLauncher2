@@ -7,15 +7,15 @@ import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import net.minecraft.launcher.Launcher;
 import net.minecraft.launcher.ui.sidebar.BetaNoticeForm;
+import net.minecraft.launcher.ui.sidebar.ProfileSelection;
 import net.minecraft.launcher.ui.sidebar.StatusPanelForm;
-import net.minecraft.launcher.ui.sidebar.VersionSelection;
 import net.minecraft.launcher.ui.sidebar.login.LoginContainerForm;
 
 public class SidebarPanel extends JPanel
 {
   private final Launcher launcher;
   private final LoginContainerForm loginForm;
-  private final VersionSelection versionSelection;
+  private final ProfileSelection profileSelection;
   private final StatusPanelForm serverStatus;
 
   public SidebarPanel(Launcher launcher)
@@ -28,7 +28,7 @@ public class SidebarPanel extends JPanel
     setBorder(new EmptyBorder(border, border, border, border));
 
     loginForm = new LoginContainerForm(launcher);
-    versionSelection = new VersionSelection(launcher);
+    profileSelection = new ProfileSelection(launcher);
     serverStatus = new StatusPanelForm(launcher);
 
     createInterface();
@@ -36,7 +36,7 @@ public class SidebarPanel extends JPanel
 
   protected void createInterface() {
     setLayout(new BoxLayout(this, 1));
-    add(versionSelection);
+    add(profileSelection);
     add(new BetaNoticeForm());
     add(serverStatus);
 
@@ -47,10 +47,6 @@ public class SidebarPanel extends JPanel
 
   public LoginContainerForm getLoginForm() {
     return loginForm;
-  }
-
-  public VersionSelection getVersionSelection() {
-    return versionSelection;
   }
 
   public Launcher getLauncher() {

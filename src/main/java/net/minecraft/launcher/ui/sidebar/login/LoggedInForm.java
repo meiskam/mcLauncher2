@@ -14,6 +14,9 @@ import net.minecraft.launcher.GameLauncher;
 import net.minecraft.launcher.Launcher;
 import net.minecraft.launcher.authentication.OldAuthentication;
 import net.minecraft.launcher.authentication.OldAuthentication.Response;
+import net.minecraft.launcher.authentication.OldAuthentication.StoredDetails;
+import net.minecraft.launcher.profile.Profile;
+import net.minecraft.launcher.profile.ProfileManager;
 import net.minecraft.launcher.updater.VersionManager;
 
 public class LoggedInForm extends BaseLogInForm
@@ -64,14 +67,35 @@ public class LoggedInForm extends BaseLogInForm
       canLogOut = false;
     }
 
-    if (response != null)
+    if (response != null) {
       welcomeText.setText("<html>Welcome, <b>" + authentication.getLastSuccessfulResponse().getPlayerName() + "</b>!</html>");
+
+      if (response.isOnline())
+        playButton.setText("Play");
+      else
+        playButton.setText("Play Offline");
+    }
     else {
       welcomeText.setText("<html>Welcome, guest!</html>");
     }
 
     logOutButton.setEnabled(canLogOut);
     playButton.setEnabled(canPlay);
+  }
+
+  public void onProfilesRefreshed(ProfileManager manager)
+  {
+    Profile profile = manager.getSelectedProfile();
+
+    if (profile.getAuthentication() != null) {
+      if (!profile.getAuthentication().equals(profile.getAuthentication()))
+        getLauncher().getAuthentication().clearLastSuccessfulResponse();
+    }
+    else {
+      getLauncher().getAuthentication().clearLastSuccessfulResponse();
+    }
+
+    getLoginContainer().checkLoginState();
   }
 
   public void actionPerformed(ActionEvent e)

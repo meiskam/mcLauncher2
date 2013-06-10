@@ -4,13 +4,19 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import javax.swing.SwingUtilities;
 import net.minecraft.launcher.Launcher;
+import net.minecraft.launcher.events.RefreshedProfilesListener;
 import net.minecraft.launcher.updater.DateTypeAdapter;
+import net.minecraft.launcher.updater.FileTypeAdapter;
 import net.minecraft.launcher.updater.LowerCaseEnumTypeAdapterFactory;
 import org.apache.commons.io.FileUtils;
 
@@ -21,7 +27,8 @@ public class ProfileManager
   private final Gson gson;
   private final Map<String, Profile> profiles = new HashMap<String, Profile>();
   private final File profileFile;
-  private Profile selectedProfile;
+  private final List<RefreshedProfilesListener> refreshedProfilesListeners = Collections.synchronizedList(new ArrayList<RefreshedProfilesListener>());
+  private String selectedProfile;
 
   public ProfileManager(Launcher launcher)
   {
@@ -31,6 +38,7 @@ public class ProfileManager
     GsonBuilder builder = new GsonBuilder();
     builder.registerTypeAdapterFactory(new LowerCaseEnumTypeAdapterFactory());
     builder.registerTypeAdapter(Date.class, new DateTypeAdapter());
+    builder.registerTypeAdapter(File.class, new FileTypeAdapter());
     builder.enableComplexMapKeySerialization();
     builder.setPrettyPrinting();
     gson = builder.create();
@@ -52,27 +60,51 @@ public class ProfileManager
       RawProfileList rawProfileList = (RawProfileList)gson.fromJson(FileUtils.readFileToString(profileFile), RawProfileList.class);
 
       profiles.putAll(rawProfileList.profiles);
-      selectedProfile = ((Profile)profiles.get(rawProfileList.selectedProfile));
+      selectedProfile = rawProfileList.selectedProfile;
 
+      fireRefreshEvent();
       return true;
     }
+    fireRefreshEvent();
     return false;
+  }
+
+  public void fireRefreshEvent()
+  {
+    final List<RefreshedProfilesListener> listeners = new ArrayList<RefreshedProfilesListener>(refreshedProfilesListeners);
+    for (Iterator<RefreshedProfilesListener> iterator = listeners.iterator(); iterator.hasNext(); ) {
+      RefreshedProfilesListener listener = (RefreshedProfilesListener)iterator.next();
+
+      if (!listener.shouldReceiveEventsInUIThread()) {
+        listener.onProfilesRefreshed(this);
+        iterator.remove();
+      }
+    }
+
+    if (!listeners.isEmpty())
+      SwingUtilities.invokeLater(new Runnable()
+      {
+        public void run() {
+          for (RefreshedProfilesListener listener : listeners)
+            listener.onProfilesRefreshed(ProfileManager.this);
+        }
+      });
   }
 
   public Profile getSelectedProfile()
   {
-    if (selectedProfile == null) {
+    if ((selectedProfile == null) || (!profiles.containsKey(selectedProfile))) {
       if (profiles.get(DEFAULT_PROFILE_NAME) != null) {
-        selectedProfile = ((Profile)profiles.get(DEFAULT_PROFILE_NAME));
+        selectedProfile = DEFAULT_PROFILE_NAME;
       } else if (profiles.size() > 0) {
-        selectedProfile = ((Profile)profiles.values().iterator().next());
+        selectedProfile = ((Profile)profiles.values().iterator().next()).getName();
       } else {
-        selectedProfile = new Profile(DEFAULT_PROFILE_NAME);
-        profiles.put(DEFAULT_PROFILE_NAME, selectedProfile);
+        selectedProfile = DEFAULT_PROFILE_NAME;
+        profiles.put(DEFAULT_PROFILE_NAME, new Profile(selectedProfile));
       }
     }
 
-    return selectedProfile;
+    return (Profile)profiles.get(selectedProfile);
   }
 
   public Map<String, Profile> getProfiles() {
@@ -83,7 +115,20 @@ public class ProfileManager
     return launcher;
   }
 
-  private static class RawProfileList {
+  public void addRefreshedProfilesListener(RefreshedProfilesListener listener) {
+    refreshedProfilesListeners.add(listener);
+  }
+
+  public void setSelectedProfile(String selectedProfile) {
+    boolean update = !this.selectedProfile.equals(selectedProfile);
+    this.selectedProfile = selectedProfile;
+
+    if (update)
+      fireRefreshEvent();
+  }
+
+  private static class RawProfileList
+  {
     public Map<String, Profile> profiles = new HashMap<String, Profile>();
     public String selectedProfile;
   }

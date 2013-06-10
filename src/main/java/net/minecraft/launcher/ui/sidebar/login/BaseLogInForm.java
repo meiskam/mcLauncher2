@@ -2,12 +2,14 @@ package net.minecraft.launcher.ui.sidebar.login;
 
 import java.awt.event.ActionListener;
 import net.minecraft.launcher.Launcher;
+import net.minecraft.launcher.events.RefreshedProfilesListener;
 import net.minecraft.launcher.events.RefreshedVersionsListener;
+import net.minecraft.launcher.profile.ProfileManager;
 import net.minecraft.launcher.ui.sidebar.SidebarGridForm;
 import net.minecraft.launcher.updater.VersionManager;
 
 public abstract class BaseLogInForm extends SidebarGridForm
-  implements ActionListener, RefreshedVersionsListener
+  implements ActionListener, RefreshedProfilesListener, RefreshedVersionsListener
 {
   private final LoginContainerForm container;
   private final Launcher launcher;
@@ -18,6 +20,7 @@ public abstract class BaseLogInForm extends SidebarGridForm
     this.container = container;
     launcher = container.getLauncher();
     launcher.getVersionManager().addRefreshedVersionsListener(this);
+    launcher.getProfileManager().addRefreshedProfilesListener(this);
   }
 
   public abstract void checkLoginState();

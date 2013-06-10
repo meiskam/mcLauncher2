@@ -62,7 +62,7 @@ public class OldAuthentication
       String username = dis.readUTF();
       String password = dis.readUTF();
       String displayName = username.length() > 0 ? username.split("@")[0] : "";
-      StoredDetails result = new StoredDetails(username, password, displayName);
+      StoredDetails result = new StoredDetails(username, password, displayName, null);
       dis.close();
       return result;
     } catch (Exception e) {
@@ -96,6 +96,10 @@ public class OldAuthentication
 
   public Response getLastSuccessfulResponse() {
     return lastSuccessfulResponse;
+  }
+
+  public void setLastSuccessfulResponse(Response lastSuccessfulResponse) {
+    this.lastSuccessfulResponse = lastSuccessfulResponse;
   }
 
   public void clearLastSuccessfulResponse() {
@@ -146,6 +150,10 @@ public class OldAuthentication
     public String getUUID() {
       return uuid;
     }
+
+    public boolean isOnline() {
+      return sessionId != null;
+    }
   }
 
   public static class StoredDetails
@@ -153,12 +161,14 @@ public class OldAuthentication
     private final String username;
     private final String password;
     private final String displayName;
+    private final String uuid;
 
-    public StoredDetails(String username, String password, String displayName)
+    public StoredDetails(String username, String password, String displayName, String uuid)
     {
       this.username = username;
       this.password = password;
       this.displayName = displayName;
+      this.uuid = uuid;
     }
 
     public String getUsername() {
@@ -171,6 +181,30 @@ public class OldAuthentication
 
     public String getDisplayName() {
       return displayName;
+    }
+
+    public String getUUID() {
+      return uuid;
+    }
+
+    public boolean equals(Object o)
+    {
+      if (this == o) return true;
+      if ((o == null) || (getClass() != o.getClass())) return false;
+
+      StoredDetails that = (StoredDetails)o;
+
+      if (username != null ? !username.equals(that.username) : that.username != null) return false;
+      if (uuid != null ? !uuid.equals(that.uuid) : that.uuid != null) return false;
+
+      return true;
+    }
+
+    public int hashCode()
+    {
+      int result = username != null ? username.hashCode() : 0;
+      result = 31 * result + (uuid != null ? uuid.hashCode() : 0);
+      return result;
     }
   }
 }

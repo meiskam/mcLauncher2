@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import javax.swing.JComboBox;
 import javax.swing.JProgressBar;
 import javax.swing.SwingUtilities;
 import net.minecraft.launcher.authentication.OldAuthentication;
@@ -33,7 +32,6 @@ import net.minecraft.launcher.profile.Profile;
 import net.minecraft.launcher.profile.ProfileManager;
 import net.minecraft.launcher.ui.LauncherPanel;
 import net.minecraft.launcher.ui.SidebarPanel;
-import net.minecraft.launcher.ui.sidebar.VersionSelection;
 import net.minecraft.launcher.ui.sidebar.login.LoginContainerForm;
 import net.minecraft.launcher.ui.tabs.CrashReportTab;
 import net.minecraft.launcher.ui.tabs.LauncherTabPanel;
@@ -109,7 +107,13 @@ public class GameLauncher
     });
     launcher.println("Getting syncinfo for selected version");
 
-    VersionSyncInfo syncInfo = (VersionSyncInfo)launcher.getLauncherPanel().getSidebar().getVersionSelection().getVersionList().getSelectedItem();
+    String lastVersionId = launcher.getProfileManager().getSelectedProfile().getLastVersionId();
+    VersionSyncInfo syncInfo;
+    if (lastVersionId != null)
+      syncInfo = launcher.getVersionManager().getVersionSyncInfo(lastVersionId);
+    else {
+      syncInfo = (VersionSyncInfo)launcher.getVersionManager().getVersions().get(0);
+    }
 
     if (syncInfo == null) {
       Launcher.getInstance().println("Tried to launch a version without a version being selected...");
@@ -178,21 +182,21 @@ public class GameLauncher
       processLauncher.addCommands(new String[] { "-Xdock:icon=assets/icons/minecraft.icns", "-Xdock:name=Minecraft" });
     }
 
-    List<String> profileArgs = selectedProfile.getJvmArgs();
+    String profileArgs = selectedProfile.getJavaArgs();
 
     if (profileArgs != null)
-      processLauncher.addCommands((String[])profileArgs.toArray(new String[profileArgs.size()]));
+      processLauncher.addCommands(new String[] { profileArgs });
     else {
-      processLauncher.addCommands(new String[] { "-Xmx1G" });
+      processLauncher.addCommands(new String[] { Profile.DEFAULT_JRE_ARGUMENTS });
     }
 
-    processLauncher.addCommands(new String[] { "-Djava.library.path=" + nativeDir.getAbsolutePath() });
+    processLauncher.addCommands(new String[] { "-Djava.library.path=" + JavaProcessLauncher.escapeArgument(nativeDir.getAbsolutePath()) });
     processLauncher.addCommands(new String[] { "-cp", constructClassPath(version) });
     processLauncher.addCommands(new String[] { version.getMainClass() });
 
     Response loginResponse = launcher.getAuthentication().getLastSuccessfulResponse();
 
-    if ((version.getProcessArguments() != null) && (loginResponse != null) && (loginResponse.getPlayerName() != null) && (loginResponse.getSessionId() != null) && (loginResponse.getUUID() != null)) {
+    if ((version.getProcessArguments() != null) && (loginResponse != null) && (loginResponse.getPlayerName() != null)) {
       processLauncher.addCommands(version.getProcessArguments().formatAuthResponse(loginResponse, version.getId()).split(" "));
     }
 

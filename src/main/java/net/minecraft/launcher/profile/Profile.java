@@ -1,29 +1,42 @@
 package net.minecraft.launcher.profile;
 
 import java.io.File;
-import java.util.List;
 import net.minecraft.launcher.authentication.OldAuthentication.StoredDetails;
 
 public class Profile
 {
+  public static final String DEFAULT_JRE_ARGUMENTS = "-Xmx1G";
   private String name;
   private File gameDir;
   private StoredDetails authentication;
   private String lastVersionId;
   private String javaDir;
-  private List<String> jvmArgs;
+  private String javaArgs;
 
   public Profile()
   {
   }
 
-  public Profile(String name)
+  public Profile(Profile copy)
   {
+    name = copy.name;
+    gameDir = copy.gameDir;
+    authentication = copy.authentication;
+    lastVersionId = copy.lastVersionId;
+    javaDir = copy.javaDir;
+    javaArgs = copy.javaArgs;
+  }
+
+  public Profile(String name) {
     this.name = name;
   }
 
   public String getName() {
     return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
   }
 
   public File getGameDir() {
@@ -50,16 +63,16 @@ public class Profile
     this.javaDir = javaDir;
   }
 
-  public void setJvmArgs(List<String> jvmArgs) {
-    this.jvmArgs = jvmArgs;
+  public void setJavaArgs(String javaArgs) {
+    this.javaArgs = javaArgs;
   }
 
   public String getLastVersionId() {
     return lastVersionId;
   }
 
-  public List<String> getJvmArgs() {
-    return jvmArgs;
+  public String getJavaArgs() {
+    return javaArgs;
   }
 
   public String getJavaPath() {

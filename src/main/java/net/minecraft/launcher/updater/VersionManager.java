@@ -6,6 +6,7 @@ import java.net.Proxy;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -142,6 +143,18 @@ public class VersionManager
         if (filter != null) counts.put(version.getType(), Integer.valueOf(counts.get(version.getType()).intValue() + 1));
       }
     }
+    Collections.sort(result, new Comparator<VersionSyncInfo>()
+    {
+      public int compare(VersionSyncInfo a, VersionSyncInfo b) {
+        Version aVer = a.getLatestVersion();
+        Version bVer = b.getLatestVersion();
+
+        if ((aVer.getReleaseTime() != null) && (bVer.getReleaseTime() != null)) {
+          return bVer.getReleaseTime().compareTo(aVer.getReleaseTime());
+        }
+        return bVer.getUpdatedTime().compareTo(aVer.getUpdatedTime());
+      }
+    });
     return result;
   }
 
@@ -286,5 +299,9 @@ public class VersionManager
 
   public void addRefreshedVersionsListener(RefreshedVersionsListener listener) {
     refreshedVersionsListeners.add(listener);
+  }
+
+  public void removeRefreshedVersionsListener(RefreshedVersionsListener listener) {
+    refreshedVersionsListeners.remove(listener);
   }
 }

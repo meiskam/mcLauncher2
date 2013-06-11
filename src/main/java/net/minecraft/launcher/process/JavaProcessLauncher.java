@@ -36,18 +36,8 @@ public class JavaProcessLauncher
     return commands;
   }
 
-  public void addEscapedCommand(String command) {
-    commands.add(escapeArgument(command));
-  }
-
   public void addCommands(String[] commands) {
-    List args = Arrays.asList(commands);
-
-    for (int i = 1; i < args.size(); i++) {
-      args.set(i, escapeArgument((String)args.get(i)));
-    }
-
-    this.commands.addAll(args);
+    this.commands.addAll(Arrays.asList(commands));
   }
 
   public JavaProcessLauncher directory(File directory) {
@@ -58,42 +48,6 @@ public class JavaProcessLauncher
 
   public File getDirectory() {
     return directory;
-  }
-
-  public static String escapeArgument(String input) {
-    String result = "";
-
-    if ((input.indexOf(' ') >= 0) || (input.indexOf('\t') >= 0) || (input.indexOf("*") > 0)) {
-      if (input.charAt(0) != '"') {
-        result = result + "\"";
-        result = result + input;
-        if (input.endsWith("\\")) {
-          result = result + "\\";
-        }
-        result = result + "\"";
-      } else if (input.endsWith("\"")) {
-        result = result + input;
-      } else {
-        throw new IllegalArgumentException("Illegal unmatched quote in commands");
-      }
-    }
-    else result = input;
-
-    return result;
-  }
-
-  public static String buildCommands(List<String> commands) {
-    StringBuilder builder = new StringBuilder(80);
-
-    for (int i = 0; i < commands.size(); i++) {
-      if (i > 0) {
-        builder.append(' ');
-      }
-
-      builder.append((String)commands.get(i));
-    }
-
-    return builder.toString();
   }
 
   protected String getJavaPath() {

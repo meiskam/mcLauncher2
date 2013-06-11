@@ -2,7 +2,7 @@ package net.minecraft.launcher;
 
 public class LauncherConstants
 {
-  public static final String VERSION_NAME = "0.9 (Dev)";
+  public static final String VERSION_NAME = "0.9.1 (Dev)";
   public static final String URL_REGISTER = "https://account.mojang.com/register";
   public static final String URL_DOWNLOAD_BASE = "https://s3.amazonaws.com/Minecraft.Download/";
   public static final String URL_RESOURCE_BASE = "https://s3.amazonaws.com/Minecraft.Resources/";

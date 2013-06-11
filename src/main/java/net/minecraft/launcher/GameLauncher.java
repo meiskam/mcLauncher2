@@ -190,7 +190,7 @@ public class GameLauncher
       processLauncher.addCommands(new String[] { Profile.DEFAULT_JRE_ARGUMENTS });
     }
 
-    processLauncher.addCommands(new String[] { "-Djava.library.path=" + JavaProcessLauncher.escapeArgument(nativeDir.getAbsolutePath()) });
+    processLauncher.addCommands(new String[] { "-Djava.library.path=" + nativeDir.getAbsolutePath() });
     processLauncher.addCommands(new String[] { "-cp", constructClassPath(version) });
     processLauncher.addCommands(new String[] { version.getMainClass() });
 
@@ -217,8 +217,17 @@ public class GameLauncher
     processLauncher.addCommands(launcher.getAdditionalArgs());
     try
     {
-      String command = JavaProcessLauncher.buildCommands(processLauncher.getFullCommands());
-      Launcher.getInstance().println("Running: " + command);
+      List<String> parts = processLauncher.getFullCommands();
+      StringBuilder full = new StringBuilder();
+      boolean first = true;
+
+      for (String part : parts) {
+        if (!first) full.append(" ");
+        full.append(part);
+        first = false;
+      }
+
+      Launcher.getInstance().println("Running " + full.toString());
       JavaProcess process = processLauncher.start();
       process.safeSetExitRunnable(this);
       Launcher.getInstance().println("---- YOU CAN CLOSE THIS LAUNCHER IF THE GAME STARTED OK ----");

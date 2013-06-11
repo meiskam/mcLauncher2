@@ -27,7 +27,7 @@ public class JavaProcess
   }
 
   public String getStartupCommand() {
-    return JavaProcessLauncher.buildCommands(commands);
+    return process.toString();
   }
 
   public LimitedCapacityList<String> getSysOutLines() {

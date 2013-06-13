@@ -40,6 +40,10 @@ public class JavaProcessLauncher
     this.commands.addAll(Arrays.asList(commands));
   }
 
+  public void addSplitCommands(String commands) {
+    addCommands(commands.split(" "));
+  }
+
   public JavaProcessLauncher directory(File directory) {
     this.directory = directory;
 

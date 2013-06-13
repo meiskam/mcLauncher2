@@ -15,6 +15,7 @@ import java.net.Proxy;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
@@ -27,7 +28,6 @@ import net.minecraft.launcher.process.JavaProcess;
 import net.minecraft.launcher.process.JavaProcessLauncher;
 import net.minecraft.launcher.process.JavaProcessRunnable;
 import net.minecraft.launcher.process.LimitedCapacityList;
-import net.minecraft.launcher.process.MinecraftProcessArguments;
 import net.minecraft.launcher.profile.Profile;
 import net.minecraft.launcher.profile.ProfileManager;
 import net.minecraft.launcher.ui.LauncherPanel;
@@ -46,6 +46,7 @@ import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.ExtractRules;
 import net.minecraft.launcher.versions.Library;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.text.StrSubstitutor;
 
 public class GameLauncher
   implements JavaProcessRunnable, DownloadListener
@@ -132,6 +133,12 @@ public class GameLauncher
         return;
       }
 
+      if (version.getMinimumLauncherVersion() > LauncherConstants.VERSION_NUMERIC) {
+        Launcher.getInstance().println("An update to your launcher is available and is required to play " + version.getId() + ". Please restart your launcher.");
+        setWorking(false);
+        return;
+      }
+
       if (!syncInfo.isInstalled()) {
         try {
           VersionList localVersionList = launcher.getVersionManager().getLocalVersionList();
@@ -185,20 +192,16 @@ public class GameLauncher
     String profileArgs = selectedProfile.getJavaArgs();
 
     if (profileArgs != null)
-      processLauncher.addCommands(new String[] { profileArgs });
+      processLauncher.addSplitCommands(profileArgs);
     else {
-      processLauncher.addCommands(new String[] { Profile.DEFAULT_JRE_ARGUMENTS });
+      processLauncher.addSplitCommands(Profile.DEFAULT_JRE_ARGUMENTS);
     }
 
     processLauncher.addCommands(new String[] { "-Djava.library.path=" + nativeDir.getAbsolutePath() });
     processLauncher.addCommands(new String[] { "-cp", constructClassPath(version) });
     processLauncher.addCommands(new String[] { version.getMainClass() });
 
-    Response loginResponse = launcher.getAuthentication().getLastSuccessfulResponse();
-
-    if ((version.getProcessArguments() != null) && (loginResponse != null) && (loginResponse.getPlayerName() != null)) {
-      processLauncher.addCommands(version.getProcessArguments().formatAuthResponse(loginResponse, version.getId()).split(" "));
-    }
+    processLauncher.addCommands(getMinecraftArguments(version, launcher.getAuthentication().getLastSuccessfulResponse(), selectedProfile, gameDirectory, new File(launcher.getWorkingDirectory(), "assets")));
 
     Proxy proxy = launcher.getProxy();
     PasswordAuthentication proxyAuth = launcher.getProxyAuth();
@@ -210,9 +213,8 @@ public class GameLauncher
         processLauncher.addCommands(new String[] { "--proxyUser", proxyAuth.getUserName() });
         processLauncher.addCommands(new String[] { "--proxyPass", new String(proxyAuth.getPassword()) });
       }
-    }
 
-    processLauncher.addCommands(new String[] { "--workDir", gameDirectory.getAbsolutePath() });
+    }
 
     processLauncher.addCommands(launcher.getAdditionalArgs());
     try
@@ -239,6 +241,28 @@ public class GameLauncher
       setWorking(false);
       return;
     }
+  }
+
+  private String[] getMinecraftArguments(CompleteVersion version, OldAuthentication.Response loginResponse, Profile selectedProfile, File gameDirectory, File assetsDirectory) {
+    Map<String, String> map = new HashMap<String, String>();
+    StrSubstitutor substitutor = new StrSubstitutor(map);
+    StringBuilder result = new StringBuilder();
+    String[] split = version.getMinecraftArguments().split(" ");
+
+    map.put("auth_username", loginResponse.getUsername());
+    map.put("auth_player_name", loginResponse.getPlayerName());
+    map.put("auth_uuid", loginResponse.getUUID());
+    map.put("auth_session", loginResponse.getSessionId());
+
+    map.put("profile_name", selectedProfile.getName());
+    map.put("game_directory", gameDirectory.getAbsolutePath());
+    map.put("game_assets", assetsDirectory.getAbsolutePath());
+
+    for (int i = 0; i < split.length; i++) {
+      split[i] = substitutor.replace(split[i]);
+    }
+
+    return split;
   }
 
   private void unpackNatives(CompleteVersion version, File targetDir) throws IOException {

@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import net.minecraft.launcher.OperatingSystem;
-import net.minecraft.launcher.process.MinecraftProcessArguments;
 import net.minecraft.launcher.updater.download.Downloadable;
 
 public class CompleteVersion
@@ -22,22 +21,21 @@ public class CompleteVersion
   private Date time;
   private Date releaseTime;
   private ReleaseType type;
-  private MinecraftProcessArguments processArguments;
+  private String minecraftArguments;
   private List<Library> libraries;
   private String mainClass;
+  private int minimumLauncherVersion = 0;
 
-  public CompleteVersion()
-  {
+  public CompleteVersion() {
   }
 
-  public CompleteVersion(String id, Date releaseTime, Date updateTime, ReleaseType type, String mainClass, MinecraftProcessArguments processArguments)
-  {
+  public CompleteVersion(String id, Date releaseTime, Date updateTime, ReleaseType type, String mainClass, String minecraftArguments) {
     if ((id == null) || (id.length() == 0)) throw new IllegalArgumentException("ID cannot be null or empty");
     if (releaseTime == null) throw new IllegalArgumentException("Release time cannot be null");
     if (updateTime == null) throw new IllegalArgumentException("Update time cannot be null");
     if (type == null) throw new IllegalArgumentException("Release type cannot be null");
     if ((mainClass == null) || (mainClass.length() == 0)) throw new IllegalArgumentException("Main class cannot be null or empty");
-    if (processArguments == null) throw new IllegalArgumentException("Process arguments cannot be null or empty");
+    if (minecraftArguments == null) throw new IllegalArgumentException("Process arguments cannot be null or empty");
 
     this.id = id;
     this.releaseTime = releaseTime;
@@ -45,15 +43,15 @@ public class CompleteVersion
     this.type = type;
     this.mainClass = mainClass;
     libraries = new ArrayList<Library>();
-    this.processArguments = processArguments;
+    this.minecraftArguments = minecraftArguments;
   }
 
   public CompleteVersion(CompleteVersion version) {
-    this(version.getId(), version.getReleaseTime(), version.getUpdatedTime(), version.getType(), version.getMainClass(), version.getProcessArguments());
+    this(version.getId(), version.getReleaseTime(), version.getUpdatedTime(), version.getType(), version.getMainClass(), version.getMinecraftArguments());
   }
 
-  public CompleteVersion(Version version, String mainClass, MinecraftProcessArguments processArguments) {
-    this(version.getId(), version.getReleaseTime(), version.getUpdatedTime(), version.getType(), mainClass, processArguments);
+  public CompleteVersion(Version version, String mainClass, String minecraftArguments) {
+    this(version.getId(), version.getReleaseTime(), version.getUpdatedTime(), version.getType(), mainClass, minecraftArguments);
   }
 
   public String getId()
@@ -191,16 +189,24 @@ public class CompleteVersion
 
   public String toString()
   {
-    return "CompleteVersion{id='" + id + '\'' + ", time=" + time + ", type=" + type + ", libraries=" + libraries + ", mainClass='" + mainClass + '\'' + '}';
+    return "CompleteVersion{id='" + id + '\'' + ", time=" + time + ", type=" + type + ", libraries=" + libraries + ", mainClass='" + mainClass + '\'' + ", minimumLauncherVersion=" + minimumLauncherVersion + '}';
   }
 
-  public MinecraftProcessArguments getProcessArguments()
+  public String getMinecraftArguments()
   {
-    return processArguments;
+    return minecraftArguments;
   }
 
-  public void setProcessArguments(MinecraftProcessArguments processArguments) {
-    if (processArguments == null) throw new IllegalArgumentException("Process arguments cannot be null or empty");
-    this.processArguments = processArguments;
+  public void setMinecraftArguments(String minecraftArguments) {
+    if (minecraftArguments == null) throw new IllegalArgumentException("Process arguments cannot be null or empty");
+    this.minecraftArguments = minecraftArguments;
+  }
+
+  public int getMinimumLauncherVersion() {
+    return minimumLauncherVersion;
+  }
+
+  public void setMinimumLauncherVersion(int minimumLauncherVersion) {
+    this.minimumLauncherVersion = minimumLauncherVersion;
   }
 }

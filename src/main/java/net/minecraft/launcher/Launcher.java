@@ -105,7 +105,7 @@ public class Launcher
 
     frame.getContentPane().removeAll();
 
-    int result = JOptionPane.showOptionDialog(frame, error, "Outdated launcher", 0, 0, null, LauncherConstants.LAUNCHER_OUT_OF_DATE_BUTTONS, LauncherConstants.LAUNCHER_OUT_OF_DATE_BUTTONS[0]);
+    int result = JOptionPane.showOptionDialog(frame, error, "Outdated launcher", 0, 0, null, LauncherConstants.BOOTSTRAP_OUT_OF_DATE_BUTTONS, LauncherConstants.BOOTSTRAP_OUT_OF_DATE_BUTTONS[0]);
 
     if (result == 0) {
       try {

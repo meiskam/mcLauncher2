@@ -3,7 +3,7 @@
   <groupId>org.shininet.minecraft</groupId>
   <artifactId>mcLauncher2</artifactId>
   <packaging>jar</packaging>
-  <version>0.9.1</version>
+  <version>0.9.2</version>
   <name>launcher</name>
 
   <properties>
@@ -20,6 +20,11 @@
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
       <version>2.2.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>3.1</version>
     </dependency>
   </dependencies>
 

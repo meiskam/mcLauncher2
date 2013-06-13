@@ -201,7 +201,9 @@ public class GameLauncher
     processLauncher.addCommands(new String[] { "-cp", constructClassPath(version) });
     processLauncher.addCommands(new String[] { version.getMainClass() });
 
-    processLauncher.addCommands(getMinecraftArguments(version, launcher.getAuthentication().getLastSuccessfulResponse(), selectedProfile, gameDirectory, new File(launcher.getWorkingDirectory(), "assets")));
+    String[] args = getMinecraftArguments(version, launcher.getAuthentication().getLastSuccessfulResponse(), selectedProfile, gameDirectory, new File(launcher.getWorkingDirectory(), "assets"));
+    if (args == null) return;
+    processLauncher.addCommands(args);
 
     Proxy proxy = launcher.getProxy();
     PasswordAuthentication proxyAuth = launcher.getProxyAuth();
@@ -244,9 +246,14 @@ public class GameLauncher
   }
 
   private String[] getMinecraftArguments(CompleteVersion version, OldAuthentication.Response loginResponse, Profile selectedProfile, File gameDirectory, File assetsDirectory) {
+    if (version.getMinecraftArguments() == null) {
+      Launcher.getInstance().println("Can't run version, missing minecraftArguments");
+      setWorking(false);
+      return null;
+    }
+
     Map<String, String> map = new HashMap<String, String>();
     StrSubstitutor substitutor = new StrSubstitutor(map);
-    StringBuilder result = new StringBuilder();
     String[] split = version.getMinecraftArguments().split(" ");
 
     map.put("auth_username", loginResponse.getUsername());
@@ -255,6 +262,8 @@ public class GameLauncher
     map.put("auth_session", loginResponse.getSessionId());
 
     map.put("profile_name", selectedProfile.getName());
+    map.put("version_name", version.getId());
+
     map.put("game_directory", gameDirectory.getAbsolutePath());
     map.put("game_assets", assetsDirectory.getAbsolutePath());
 

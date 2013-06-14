@@ -30,9 +30,10 @@ public class ProfileSelection extends SidebarGridForm
   private final JLabel versionLabel = new JLabel();
   private final JLabel statusLabel = new JLabel();
   private final Launcher launcher;
-  private boolean skipSelectionUpdate = false;
+  private boolean skipSelectionUpdate;
 
-  public ProfileSelection(Launcher launcher) {
+  public ProfileSelection(Launcher launcher)
+  {
     super("Version Selection");
     this.launcher = launcher;
     setMaximumSize(new Dimension(2147483647, 300));

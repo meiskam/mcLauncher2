@@ -10,8 +10,8 @@ public class LimitedCapacityList<T>
   private final T[] items;
   private final Class<? extends T> clazz;
   private final ReadWriteLock locks = new ReentrantReadWriteLock();
-  private int size = 0;
-  private int head = 0;
+  private int size;
+  private int head;
 
   public LimitedCapacityList(Class<? extends T> clazz, int maxSize)
   {

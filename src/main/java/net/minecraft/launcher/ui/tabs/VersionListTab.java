@@ -40,8 +40,8 @@ public class VersionListTab extends JScrollPane
     launcher.getVersionManager().addRefreshedVersionsListener(this);
   }
 
-  protected void createInterface()
-  {
+  protected void createInterface() {
+    table.setFillsViewportHeight(true);
   }
 
   public Launcher getLauncher() {

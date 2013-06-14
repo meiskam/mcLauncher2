@@ -57,8 +57,8 @@ public class ProfileListTab extends JScrollPane
     popupMenu.add(copyProfileButton);
     popupMenu.add(deleteProfileButton);
 
+    table.setFillsViewportHeight(true);
     table.setSelectionMode(0);
-    table.setComponentPopupMenu(popupMenu);
 
     popupMenu.addPopupMenuListener(new PopupMenuListener()
     {
@@ -139,6 +139,19 @@ public class ProfileListTab extends JScrollPane
           if ((row >= 0) && (row < dataModel.profiles.size()))
             ProfileListTab.this.showEditProfileDialog((Profile)dataModel.profiles.get(row));
         }
+      }
+
+      public void mouseReleased(MouseEvent e)
+      {
+        int r = table.rowAtPoint(e.getPoint());
+        if ((r >= 0) && (r < table.getRowCount()))
+          table.setRowSelectionInterval(r, r);
+        else {
+          table.clearSelection();
+        }
+
+        if ((e.isPopupTrigger()) && ((e.getComponent() instanceof JTable)))
+          popupMenu.show(e.getComponent(), e.getX(), e.getY());
       }
     });
   }

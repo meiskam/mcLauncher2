@@ -24,9 +24,10 @@ public class OldAuthentication
   private final Proxy proxy;
   private final File lastLoginFile;
   private Response lastSuccessfulResponse;
-  private boolean isAuthenticating = false;
+  private boolean isAuthenticating;
 
-  public OldAuthentication(Launcher launcher, Proxy proxy) {
+  public OldAuthentication(Launcher launcher, Proxy proxy)
+  {
     lastLoginFile = new File(launcher.getWorkingDirectory(), "lastlogin");
     this.proxy = proxy;
   }

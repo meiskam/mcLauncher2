@@ -55,10 +55,11 @@ public class GameLauncher
   private final Launcher launcher;
   private final List<DownloadJob> jobs = new ArrayList<DownloadJob>();
   private CompleteVersion version;
-  private boolean isWorking = false;
-  private File nativeDir = null;
+  private boolean isWorking;
+  private File nativeDir;
 
-  public GameLauncher(Launcher launcher) {
+  public GameLauncher(Launcher launcher)
+  {
     this.launcher = launcher;
   }
 

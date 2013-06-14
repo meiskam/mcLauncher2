@@ -21,9 +21,10 @@ public class DownloadJob
   private final String name;
   private final boolean ignoreFailures;
   private final AtomicInteger remainingThreads = new AtomicInteger();
-  private boolean started = false;
+  private boolean started;
 
-  public DownloadJob(String name, boolean ignoreFailures, DownloadListener listener, Collection<Downloadable> files) {
+  public DownloadJob(String name, boolean ignoreFailures, DownloadListener listener, Collection<Downloadable> files)
+  {
     this.name = name;
     this.ignoreFailures = ignoreFailures;
     this.listener = listener;

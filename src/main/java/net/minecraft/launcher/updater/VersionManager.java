@@ -40,9 +40,10 @@ public class VersionManager
   private final ThreadPoolExecutor executorService = new ExceptionalThreadPoolExecutor(8);
   private final List<RefreshedVersionsListener> refreshedVersionsListeners = Collections.synchronizedList(new ArrayList<RefreshedVersionsListener>());
   private final Object refreshLock = new Object();
-  private boolean isRefreshing = false;
+  private boolean isRefreshing;
 
-  public VersionManager(VersionList localVersionList, VersionList remoteVersionList) {
+  public VersionManager(VersionList localVersionList, VersionList remoteVersionList)
+  {
     this.localVersionList = localVersionList;
     this.remoteVersionList = remoteVersionList;
   }

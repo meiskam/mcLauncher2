@@ -24,12 +24,14 @@ public class CompleteVersion
   private String minecraftArguments;
   private List<Library> libraries;
   private String mainClass;
-  private int minimumLauncherVersion = 0;
+  private int minimumLauncherVersion;
 
-  public CompleteVersion() {
+  public CompleteVersion()
+  {
   }
 
-  public CompleteVersion(String id, Date releaseTime, Date updateTime, ReleaseType type, String mainClass, String minecraftArguments) {
+  public CompleteVersion(String id, Date releaseTime, Date updateTime, ReleaseType type, String mainClass, String minecraftArguments)
+  {
     if ((id == null) || (id.length() == 0)) throw new IllegalArgumentException("ID cannot be null or empty");
     if (releaseTime == null) throw new IllegalArgumentException("Release time cannot be null");
     if (updateTime == null) throw new IllegalArgumentException("Update time cannot be null");

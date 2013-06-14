@@ -21,10 +21,11 @@ public class Downloadable
   private final File target;
   private final boolean forceDownload;
   private final Proxy proxy;
-  private int numAttempts = 0;
-  private boolean finished = false;
+  private int numAttempts;
+  private boolean finished;
 
-  public Downloadable(Proxy proxy, URL remoteFile, File localFile, boolean forceDownload) {
+  public Downloadable(Proxy proxy, URL remoteFile, File localFile, boolean forceDownload)
+  {
     this.proxy = proxy;
     url = remoteFile;
     target = localFile;

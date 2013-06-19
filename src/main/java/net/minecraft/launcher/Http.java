@@ -49,6 +49,8 @@ public class Http
 
   public static String performPost(URL url, String parameters, Proxy proxy) throws IOException {
     HttpURLConnection connection = (HttpURLConnection)url.openConnection(proxy);
+    connection.setConnectTimeout(15000);
+    connection.setReadTimeout(15000);
     connection.setRequestMethod("POST");
     connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 

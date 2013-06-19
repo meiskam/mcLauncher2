@@ -171,6 +171,11 @@ public class GameLauncher
     launcher.println("Launching game");
     Profile selectedProfile = launcher.getProfileManager().getSelectedProfile();
 
+    if (version == null) {
+      Launcher.getInstance().println("Aborting launch; version is null?");
+      return;
+    }
+
     nativeDir = new File(launcher.getWorkingDirectory(), "versions/" + version.getId() + "/" + version.getId() + "-natives-" + System.nanoTime());
     if (!nativeDir.isDirectory()) nativeDir.mkdirs();
     launcher.println("Unpacking natives to " + nativeDir);
@@ -183,6 +188,17 @@ public class GameLauncher
 
     File gameDirectory = selectedProfile.getGameDir() == null ? launcher.getWorkingDirectory() : selectedProfile.getGameDir();
     Launcher.getInstance().println("Launching in " + gameDirectory);
+
+    if (!gameDirectory.exists()) {
+      if (!gameDirectory.mkdirs()) {
+        Launcher.getInstance().println("Aborting launch; couldn't create game directory");
+      }
+    }
+    else if (!gameDirectory.isDirectory()) {
+      Launcher.getInstance().println("Aborting launch; game directory is not actually a directory");
+      return;
+    }
+
     JavaProcessLauncher processLauncher = new JavaProcessLauncher(selectedProfile.getJavaPath(), new String[0]);
     processLauncher.directory(gameDirectory);
 

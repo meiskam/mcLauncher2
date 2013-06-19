@@ -1,6 +1,5 @@
 package net.minecraft.launcher.ui.tabs;
 
-import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -10,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import javax.swing.JDialog;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
@@ -88,7 +86,7 @@ public class ProfileListTab extends JScrollPane
           profile.setName(profile.getName() + "_");
         }
 
-        ProfileListTab.this.showEditProfileDialog(profile);
+        ProfileEditorPopup.showEditProfileDialog(getLauncher(), profile);
       }
     });
     copyProfileButton.addActionListener(new ActionListener()
@@ -105,7 +103,7 @@ public class ProfileListTab extends JScrollPane
           copy.setName(copy.getName() + "_");
         }
 
-        ProfileListTab.this.showEditProfileDialog(copy);
+        ProfileEditorPopup.showEditProfileDialog(getLauncher(), copy);
       }
     });
     deleteProfileButton.addActionListener(new ActionListener()
@@ -137,34 +135,38 @@ public class ProfileListTab extends JScrollPane
           int row = table.getSelectedRow();
 
           if ((row >= 0) && (row < dataModel.profiles.size()))
-            ProfileListTab.this.showEditProfileDialog((Profile)dataModel.profiles.get(row));
+            ProfileEditorPopup.showEditProfileDialog(getLauncher(), (Profile)dataModel.profiles.get(row));
         }
       }
 
       public void mouseReleased(MouseEvent e)
       {
-        int r = table.rowAtPoint(e.getPoint());
-        if ((r >= 0) && (r < table.getRowCount()))
-          table.setRowSelectionInterval(r, r);
-        else {
-          table.clearSelection();
-        }
+        if ((e.isPopupTrigger()) && ((e.getComponent() instanceof JTable))) {
+          int r = table.rowAtPoint(e.getPoint());
+          if ((r >= 0) && (r < table.getRowCount()))
+            table.setRowSelectionInterval(r, r);
+          else {
+            table.clearSelection();
+          }
 
-        if ((e.isPopupTrigger()) && ((e.getComponent() instanceof JTable)))
           popupMenu.show(e.getComponent(), e.getX(), e.getY());
+        }
+      }
+
+      public void mousePressed(MouseEvent e)
+      {
+        if ((e.isPopupTrigger()) && ((e.getComponent() instanceof JTable))) {
+          int r = table.rowAtPoint(e.getPoint());
+          if ((r >= 0) && (r < table.getRowCount()))
+            table.setRowSelectionInterval(r, r);
+          else {
+            table.clearSelection();
+          }
+
+          popupMenu.show(e.getComponent(), e.getX(), e.getY());
+        }
       }
     });
-  }
-
-  private void showEditProfileDialog(Profile profile)
-  {
-    JDialog dialog = new JDialog(getLauncher().getFrame(), "Profile Editor", true);
-    ProfileEditorPopup editor = new ProfileEditorPopup(getLauncher(), profile);
-    dialog.add(editor);
-    dialog.setPreferredSize(new Dimension(450, 300));
-    dialog.pack();
-    dialog.setLocationRelativeTo(getLauncher().getFrame());
-    dialog.setVisible(true);
   }
 
   public Launcher getLauncher() {

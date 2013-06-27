@@ -5,6 +5,7 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -13,6 +14,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
@@ -21,13 +23,13 @@ import net.minecraft.launcher.GameLauncher;
 import net.minecraft.launcher.Launcher;
 import net.minecraft.launcher.LauncherConstants;
 import net.minecraft.launcher.OperatingSystem;
-import net.minecraft.launcher.authentication.OldAuthentication;
-import net.minecraft.launcher.authentication.OldAuthentication.Response;
-import net.minecraft.launcher.authentication.OldAuthentication.StoredDetails;
+import net.minecraft.launcher.authentication.AuthenticationService;
+import net.minecraft.launcher.authentication.GameProfile;
 import net.minecraft.launcher.profile.Profile;
 import net.minecraft.launcher.profile.ProfileManager;
-import net.minecraft.launcher.ui.popups.ErrorMessagePopup;
 import net.minecraft.launcher.updater.VersionManager;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 
 public class NotLoggedInForm extends BaseLogInForm
 {
@@ -100,60 +102,60 @@ public class NotLoggedInForm extends BaseLogInForm
 
     if (getLauncher().getGameLauncher().isWorking()) canLogIn = false;
     if (getLauncher().getVersionManager().getVersions().size() <= 0) canLogIn = false;
-    if (getLauncher().getAuthentication().isAuthenticating()) canLogIn = false;
 
     playButton.setEnabled(canLogIn);
   }
 
   public void actionPerformed(ActionEvent e)
   {
-    OldAuthentication authentication = getLauncher().getAuthentication();
+    AuthenticationService authentication = getLauncher().getProfileManager().getSelectedProfile().getAuthentication();
 
     if ((e.getSource() == playButton) || (e.getSource() == usernameField) || (e.getSource() == passwordField)) {
-      Response response = authentication.getLastSuccessfulResponse();
-
-      if (response != null)
+      if ((authentication.isLoggedIn()) && ((ArrayUtils.isEmpty(authentication.getAvailableProfiles())) || (authentication.getSelectedProfile() != null)))
         getLauncher().getGameLauncher().playGame();
       else
         tryLogIn(true, true);
     }
-    else {
+    else
       try {
         OperatingSystem.openLink(new URI(LauncherConstants.URL_REGISTER));
       }
-      catch (URISyntaxException localURISyntaxException) {
+      catch (URISyntaxException localURISyntaxException)
+      {
       }
-    }
   }
 
   public void onProfilesRefreshed(ProfileManager manager) {
     Profile profile = manager.getSelectedProfile();
+    AuthenticationService authentication = profile.getAuthentication();
 
-    if (profile.getAuthentication() != null) {
-      String username = profile.getAuthentication().getUsername();
+    if ((authentication.isLoggedIn()) && (authentication.canPlayOnline())) {
+      checkLoginState();
+    } else if (!StringUtils.isBlank(authentication.getUsername())) {
+      getUsernameField().setText(authentication.getUsername());
+      String password = authentication.guessPasswordFromSillyOldFormat(new File(getLauncher().getWorkingDirectory(), "lastlogin"));
 
-      if ((username != null) && (username.length() > 0)) {
-        getUsernameField().setText(username);
-        String password = getLauncher().getAuthentication().guessPasswordFromSillyOldFormat(username);
+      if (!StringUtils.isBlank(password)) {
+        getLauncher().println("Going to log in with legacy stored username & password...");
 
-        if ((password != null) && (password.length() > 0)) {
-          getLauncher().println("Going to log in with legacy stored username & password...");
-
-          getPasswordField().setText(password);
-          tryLogIn(false, false);
-        }
+        getPasswordField().setText(password);
       }
-    } else {
+
+      authentication.setPassword(String.valueOf(passwordField.getPassword()));
+
+      if (authentication.canLogIn())
+        tryLogIn(false, false);
+    }
+    else {
       getUsernameField().setText("");
       getPasswordField().setText("");
     }
   }
 
   public void tryLogIn(final boolean launchOnSuccess, final boolean verbose) {
-    final OldAuthentication authentication = getLauncher().getAuthentication();
     final Profile profile = getLauncher().getProfileManager().getSelectedProfile();
+    final AuthenticationService authentication = profile.getAuthentication();
 
-    authentication.setAuthenticating(true);
     getLoginContainer().checkLoginState();
 
     getLauncher().getVersionManager().getExecutorService().submit(new Runnable()
@@ -163,56 +165,44 @@ public class NotLoggedInForm extends BaseLogInForm
         try
         {
           Launcher.getInstance().println("Trying to log in...");
-          Response response = authentication.login(username, new String(passwordField.getPassword()));
+
+          authentication.setUsername(username);
+          authentication.setPassword(String.valueOf(getPasswordField().getPassword()));
+          authentication.logIn();
 
           if (!getLauncher().getProfileManager().getSelectedProfile().equals(profile)) {
             getLauncher().println("Profile changed during authentication, ignoring response.");
-            getLauncher().getAuthentication().setAuthenticating(false);
-            getLauncher().getAuthentication().clearLastSuccessfulResponse();
             getLoginContainer().checkLoginState();
             return;
           }
 
-          if (response.getErrorMessage() != null) {
-            NotLoggedInForm.this.loginFailed(response.getErrorMessage(), verbose);
-          } else if (response.getSessionId() == null) {
-            NotLoggedInForm.this.loginFailed("Could not log in: SessionID was null?", verbose);
-          } else if (response.getPlayerName() == null) {
-            NotLoggedInForm.this.loginFailed("Could not log in: Name was null?", verbose);
-          } else if (response.getUUID() == null) {
-            NotLoggedInForm.this.loginFailed("Could not log in: UUID was null?", verbose);
-          } else {
-            getLauncher().println("Logged in successfully");
-            getLauncher().getAuthentication().setAuthenticating(false);
+          getLauncher().println("Logged in successfully");
+          NotLoggedInForm.this.saveAuthenticationDetails(profile);
 
-            NotLoggedInForm.this.saveAuthenticationDetails(profile);
-
-            if (launchOnSuccess)
-              getLauncher().getGameLauncher().playGame();
-            else
-              getLoginContainer().checkLoginState();
-          }
+          if (launchOnSuccess)
+            getLauncher().getGameLauncher().playGame();
+          else
+            getLoginContainer().checkLoginState();
         }
         catch (Throwable ex) {
           if (!getLauncher().getProfileManager().getSelectedProfile().equals(profile)) {
             getLauncher().println("Profile changed during authentication, ignoring response (which was an error anyway).");
-            getLauncher().getAuthentication().setAuthenticating(false);
             getLoginContainer().checkLoginState();
             return;
           }
 
-          OldAuthentication.StoredDetails details = getLauncher().getProfileManager().getSelectedProfile().getAuthentication();
+          if (authentication.isLoggedIn()) {
+            getLauncher().println("Couldn't go online", ex);
 
-          if ((details != null) && (details.getUsername().equals(username)) && (details.getDisplayName() != null) && (details.getUUID() != null)) {
-            getLauncher().println("Couldn't log in", ex);
-            Launcher.getInstance().println("Going to play offline as '" + details.getDisplayName() + "'...");
-            OldAuthentication.Response response = new OldAuthentication.Response(details.getUsername(), null, null, details.getDisplayName(), details.getUUID());
-            getLauncher().getAuthentication().setLastSuccessfulResponse(response);
+            if (authentication.getSelectedProfile() != null)
+              Launcher.getInstance().println("Going to play offline as '" + authentication.getSelectedProfile().getName() + "'...");
+            else {
+              Launcher.getInstance().println("Going to play offline demo...");
+            }
 
-            getLauncher().getAuthentication().setAuthenticating(false);
             getLoginContainer().checkLoginState();
           } else {
-            NotLoggedInForm.this.loginFailed("Could not log in: " + ex.getMessage(), verbose);
+            NotLoggedInForm.this.loginFailed(ex.getMessage(), verbose, authentication.getUsername().contains("@"));
           }
         }
       }
@@ -220,26 +210,38 @@ public class NotLoggedInForm extends BaseLogInForm
   }
 
   private void saveAuthenticationDetails(Profile profile) {
-    OldAuthentication.Response response = getLauncher().getAuthentication().getLastSuccessfulResponse();
-    if ((response == null) || (response.getUsername() == null)) return;
-
-    profile.setAuthentication(new OldAuthentication.StoredDetails(response.getUsername(), null, response.getPlayerName(), response.getUUID()));
-    try
-    {
+    try {
       getLauncher().getProfileManager().saveProfiles();
     } catch (IOException e) {
       getLauncher().println("Couldn't save authentication details to profile", e);
     }
   }
 
-  private void loginFailed(String error, boolean verbose) {
-    Launcher.getInstance().println(error);
-    if (verbose) ErrorMessagePopup.show(getLauncher().getFrame(), error);
+  private void loginFailed(String error, final boolean verbose, final boolean mojangAccount) {
+    Launcher.getInstance().println("Could not log in: " + error);
 
     SwingUtilities.invokeLater(new Runnable()
     {
       public void run() {
-        getLauncher().getAuthentication().setAuthenticating(false);
+        if (verbose) {
+          String[] buttons = { "Forgot Password", "Okay" };
+          String url = mojangAccount ? LauncherConstants.URL_FORGOT_PASSWORD_MOJANG : LauncherConstants.URL_FORGOT_PASSWORD_MINECRAFT;
+          String errorMessage = "";
+          errorMessage = errorMessage + "Sorry, but your username or password is incorrect!";
+          errorMessage = errorMessage + "\nPlease try again, and check your Caps Lock key is not turned on.";
+          errorMessage = errorMessage + "\nIf you're having trouble, try the 'Forgot Password' button or visit help.mojang.com";
+
+          int result = JOptionPane.showOptionDialog(getLauncher().getFrame(), errorMessage, "Could not log in", 0, 0, null, buttons, buttons[0]);
+
+          if (result == 0) {
+            try {
+              OperatingSystem.openLink(new URI(url));
+            } catch (URISyntaxException e) {
+              getLauncher().println("Couldn't open forgot password link. Please visit " + url + " manually.", e);
+            }
+          }
+        }
+
         getLoginContainer().checkLoginState();
       }
     });

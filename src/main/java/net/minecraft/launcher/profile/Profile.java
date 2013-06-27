@@ -1,14 +1,15 @@
 package net.minecraft.launcher.profile;
 
 import java.io.File;
-import net.minecraft.launcher.authentication.OldAuthentication.StoredDetails;
+import net.minecraft.launcher.authentication.AuthenticationService;
+import net.minecraft.launcher.authentication.yggdrasil.YggdrasilAuthenticationService;
 
 public class Profile
 {
   public static final String DEFAULT_JRE_ARGUMENTS = "-Xmx1G";
+  private AuthenticationService authentication = new YggdrasilAuthenticationService();
   private String name;
   private File gameDir;
-  private StoredDetails authentication;
   private String lastVersionId;
   private String javaDir;
   private String javaArgs;
@@ -47,14 +48,6 @@ public class Profile
     this.gameDir = gameDir;
   }
 
-  public StoredDetails getAuthentication() {
-    return authentication;
-  }
-
-  public void setAuthentication(StoredDetails authentication) {
-    this.authentication = authentication;
-  }
-
   public void setLastVersionId(String lastVersionId) {
     this.lastVersionId = lastVersionId;
   }
@@ -77,5 +70,9 @@ public class Profile
 
   public String getJavaPath() {
     return javaDir;
+  }
+
+  public AuthenticationService getAuthentication() {
+    return authentication;
   }
 }

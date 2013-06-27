@@ -19,7 +19,8 @@ import javax.swing.event.PopupMenuListener;
 import javax.swing.table.AbstractTableModel;
 import net.minecraft.launcher.Launcher;
 import net.minecraft.launcher.LauncherConstants;
-import net.minecraft.launcher.authentication.OldAuthentication.StoredDetails;
+import net.minecraft.launcher.authentication.AuthenticationService;
+import net.minecraft.launcher.authentication.GameProfile;
 import net.minecraft.launcher.events.RefreshedProfilesListener;
 import net.minecraft.launcher.profile.Profile;
 import net.minecraft.launcher.profile.ProfileManager;
@@ -222,10 +223,14 @@ public class ProfileListTab extends JScrollPane
       case COLUMN_NAME:
         return profile.getName();
       case COLUMN_AUTHENTICATION:
-        if (profile.getAuthentication() == null) {
-          return "(Not logged in)";
+        if (profile.getAuthentication().isLoggedIn()) {
+          if (profile.getAuthentication().getSelectedProfile() != null) {
+            return profile.getAuthentication().getSelectedProfile().getName();
+          }
+          return profile.getAuthentication().getUsername();
         }
-        return profile.getAuthentication().getDisplayName();
+
+        return "(Not logged in)";
       case COLUMN_VERSION:
         if (profile.getLastVersionId() == null) {
           return "(Latest version)";

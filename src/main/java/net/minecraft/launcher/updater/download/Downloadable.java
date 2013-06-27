@@ -43,6 +43,10 @@ public class Downloadable
     if ((!forceDownload) && (target.isFile())) {
       localMd5 = getMD5(target);
     }
+
+    if ((target.isFile()) && (!target.canWrite())) {
+      throw new RuntimeException("Do not have write permissions for " + target + " - aborting!");
+    }
     try
     {
       HttpURLConnection connection = makeConnection(localMd5);

@@ -12,8 +12,12 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import javax.swing.SwingUtilities;
 import net.minecraft.launcher.Launcher;
+import net.minecraft.launcher.authentication.AuthenticationSerializer;
+import net.minecraft.launcher.authentication.AuthenticationService;
+import net.minecraft.launcher.authentication.LegacyAuthenticationService;
 import net.minecraft.launcher.events.RefreshedProfilesListener;
 import net.minecraft.launcher.updater.DateTypeAdapter;
 import net.minecraft.launcher.updater.FileTypeAdapter;
@@ -39,6 +43,8 @@ public class ProfileManager
     builder.registerTypeAdapterFactory(new LowerCaseEnumTypeAdapterFactory());
     builder.registerTypeAdapter(Date.class, new DateTypeAdapter());
     builder.registerTypeAdapter(File.class, new FileTypeAdapter());
+    builder.registerTypeAdapter(AuthenticationService.class, new AuthenticationSerializer());
+    builder.registerTypeAdapter(LegacyAuthenticationService.class, new AuthenticationSerializer());
     builder.enableComplexMapKeySerialization();
     builder.setPrettyPrinting();
     gson = builder.create();
@@ -48,6 +54,7 @@ public class ProfileManager
     RawProfileList rawProfileList = new RawProfileList();
     rawProfileList.profiles = profiles;
     rawProfileList.selectedProfile = getSelectedProfile().getName();
+    rawProfileList.clientToken = launcher.getClientToken();
 
     FileUtils.writeStringToFile(profileFile, gson.toJson(rawProfileList));
   }
@@ -61,6 +68,7 @@ public class ProfileManager
 
       profiles.putAll(rawProfileList.profiles);
       selectedProfile = rawProfileList.selectedProfile;
+      launcher.setClientToken(rawProfileList.clientToken);
 
       fireRefreshEvent();
       return true;
@@ -131,5 +139,6 @@ public class ProfileManager
   {
     public Map<String, Profile> profiles = new HashMap<String, Profile>();
     public String selectedProfile;
+    public UUID clientToken = UUID.randomUUID();
   }
 }

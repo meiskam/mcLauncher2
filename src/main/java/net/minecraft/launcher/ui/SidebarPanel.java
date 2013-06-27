@@ -6,7 +6,6 @@ import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import net.minecraft.launcher.Launcher;
-import net.minecraft.launcher.ui.sidebar.BetaNoticeForm;
 import net.minecraft.launcher.ui.sidebar.ProfileSelection;
 import net.minecraft.launcher.ui.sidebar.StatusPanelForm;
 import net.minecraft.launcher.ui.sidebar.login.LoginContainerForm;
@@ -37,7 +36,6 @@ public class SidebarPanel extends JPanel
   protected void createInterface() {
     setLayout(new BoxLayout(this, 1));
     add(profileSelection);
-    add(new BetaNoticeForm());
     add(serverStatus);
 
     add(new Filler(new Dimension(0, 0), new Dimension(0, 0), new Dimension(2147483647, 2147483647)));

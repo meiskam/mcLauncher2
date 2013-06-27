@@ -17,6 +17,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ThreadPoolExecutor;
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
@@ -24,8 +25,8 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
-import net.minecraft.launcher.authentication.OldAuthentication;
-import net.minecraft.launcher.authentication.OldAuthentication.StoredDetails;
+import net.minecraft.launcher.authentication.AuthenticationService;
+import net.minecraft.launcher.authentication.LegacyAuthenticationService;
 import net.minecraft.launcher.profile.Profile;
 import net.minecraft.launcher.profile.ProfileManager;
 import net.minecraft.launcher.ui.LauncherPanel;
@@ -48,12 +49,11 @@ public class Launcher
   private final Proxy proxy;
   private final PasswordAuthentication proxyAuth;
   private final String[] additionalArgs;
-  private final OldAuthentication authentication;
   private final Integer bootstrapVersion;
   private final ProfileManager profileManager;
+  private UUID clientToken = UUID.randomUUID();
 
-  public Launcher(JFrame frame, File workingDirectory, Proxy proxy, PasswordAuthentication proxyAuth, String[] args)
-  {
+  public Launcher(JFrame frame, File workingDirectory, Proxy proxy, PasswordAuthentication proxyAuth, String[] args) {
     this(frame, workingDirectory, proxy, proxyAuth, args, LauncherConstants.UNVERSIONED_BOOTSTRAP_VERSION);
   }
 
@@ -69,7 +69,6 @@ public class Launcher
     this.frame = frame;
     gameLauncher = new GameLauncher(this);
     profileManager = new ProfileManager(this);
-    authentication = new OldAuthentication(this, proxy);
     versionManager = new VersionManager(new LocalVersionList(workingDirectory), new RemoteVersionList(proxy));
     launcherPanel = new LauncherPanel(this);
 
@@ -111,7 +110,7 @@ public class Launcher
       try {
         OperatingSystem.openLink(new URI(LauncherConstants.URL_BOOTSTRAP_DOWNLOAD));
       } catch (URISyntaxException e) {
-        println("Couldn't open bootstrap download link", e);
+        println("Couldn't open bootstrap download link. Please visit " + LauncherConstants.URL_BOOTSTRAP_DOWNLOAD + " manually.", e);
       }
     }
     frame.dispatchEvent(new WindowEvent(frame, 201));
@@ -183,12 +182,14 @@ public class Launcher
       public void run() {
         try {
           if (!profileManager.loadProfiles()) {
-            OldAuthentication.StoredDetails result = authentication.getStoredDetails();
+            String[] storedDetails = LegacyAuthenticationService.getStoredDetails(new File(getWorkingDirectory(), "lastlogin"));
 
-            if (result != null) {
-              result = new OldAuthentication.StoredDetails(result.getUsername(), null, result.getDisplayName(), result.getUUID());
+            if (storedDetails != null) {
               Profile profile = profileManager.getSelectedProfile();
-              profile.setAuthentication(result);
+
+              profile.getAuthentication().setUsername(storedDetails[0]);
+              profile.getAuthentication().setPassword(storedDetails[1]);
+
               profileManager.saveProfiles();
               profileManager.fireRefreshEvent();
 
@@ -267,10 +268,6 @@ public class Launcher
     return additionalArgs;
   }
 
-  public OldAuthentication getAuthentication() {
-    return authentication;
-  }
-
   public void println(String line) {
     System.out.println(line);
 
@@ -317,5 +314,13 @@ public class Launcher
 
   public ProfileManager getProfileManager() {
     return profileManager;
+  }
+
+  public UUID getClientToken() {
+    return clientToken;
+  }
+
+  public void setClientToken(UUID clientToken) {
+    this.clientToken = clientToken;
   }
 }

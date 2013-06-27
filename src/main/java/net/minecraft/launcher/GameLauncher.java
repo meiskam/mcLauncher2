@@ -18,12 +18,13 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import javax.swing.JProgressBar;
 import javax.swing.SwingUtilities;
-import net.minecraft.launcher.authentication.OldAuthentication;
-import net.minecraft.launcher.authentication.OldAuthentication.Response;
+import net.minecraft.launcher.authentication.AuthenticationService;
+import net.minecraft.launcher.authentication.GameProfile;
 import net.minecraft.launcher.process.JavaProcess;
 import net.minecraft.launcher.process.JavaProcessLauncher;
 import net.minecraft.launcher.process.JavaProcessRunnable;
@@ -202,8 +203,10 @@ public class GameLauncher
     JavaProcessLauncher processLauncher = new JavaProcessLauncher(selectedProfile.getJavaPath(), new String[0]);
     processLauncher.directory(gameDirectory);
 
+    File assetsDirectory = new File(launcher.getWorkingDirectory(), "assets");
+
     if (OperatingSystem.getCurrentPlatform().equals(OperatingSystem.OSX)) {
-      processLauncher.addCommands(new String[] { "-Xdock:icon=assets/icons/minecraft.icns", "-Xdock:name=Minecraft" });
+      processLauncher.addCommands(new String[] { "-Xdock:icon=" + new File(assetsDirectory, "icons/minecraft.icns").getAbsolutePath(), "-Xdock:name=Minecraft" });
     }
 
     String profileArgs = selectedProfile.getJavaArgs();
@@ -218,7 +221,7 @@ public class GameLauncher
     processLauncher.addCommands(new String[] { "-cp", constructClassPath(version) });
     processLauncher.addCommands(new String[] { version.getMainClass() });
 
-    String[] args = getMinecraftArguments(version, launcher.getAuthentication().getLastSuccessfulResponse(), selectedProfile, gameDirectory, new File(launcher.getWorkingDirectory(), "assets"));
+    String[] args = getMinecraftArguments(version, selectedProfile, gameDirectory, assetsDirectory);
     if (args == null) return;
     processLauncher.addCommands(args);
 
@@ -232,7 +235,10 @@ public class GameLauncher
         processLauncher.addCommands(new String[] { "--proxyUser", proxyAuth.getUserName() });
         processLauncher.addCommands(new String[] { "--proxyPass", new String(proxyAuth.getPassword()) });
       }
+    }
 
+    if (selectedProfile.getAuthentication().getSelectedProfile() == null) {
+      processLauncher.addCommands(new String[] { "--demo" });
     }
 
     processLauncher.addCommands(launcher.getAdditionalArgs());
@@ -262,7 +268,7 @@ public class GameLauncher
     }
   }
 
-  private String[] getMinecraftArguments(CompleteVersion version, OldAuthentication.Response loginResponse, Profile selectedProfile, File gameDirectory, File assetsDirectory) {
+  private String[] getMinecraftArguments(CompleteVersion version, Profile selectedProfile, File gameDirectory, File assetsDirectory) {
     if (version.getMinecraftArguments() == null) {
       Launcher.getInstance().println("Can't run version, missing minecraftArguments");
       setWorking(false);
@@ -272,11 +278,18 @@ public class GameLauncher
     Map<String, String> map = new HashMap<String, String>();
     StrSubstitutor substitutor = new StrSubstitutor(map);
     String[] split = version.getMinecraftArguments().split(" ");
+    AuthenticationService authentication = selectedProfile.getAuthentication();
 
-    map.put("auth_username", loginResponse.getUsername());
-    map.put("auth_player_name", loginResponse.getPlayerName());
-    map.put("auth_uuid", loginResponse.getUUID());
-    map.put("auth_session", loginResponse.getSessionId());
+    map.put("auth_username", authentication.getUsername());
+    map.put("auth_session", (authentication.getSessionToken() == null) && (authentication.canPlayOnline()) ? "-" : authentication.getSessionToken());
+
+    if (authentication.getSelectedProfile() != null) {
+      map.put("auth_player_name", authentication.getSelectedProfile().getName());
+      map.put("auth_uuid", authentication.getSelectedProfile().getId());
+    } else {
+      map.put("auth_player_name", "Player");
+      map.put("auth_uuid", new UUID(0L, 0L).toString());
+    }
 
     map.put("profile_name", selectedProfile.getName());
     map.put("version_name", version.getId());

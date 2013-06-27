@@ -12,9 +12,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import net.minecraft.launcher.GameLauncher;
 import net.minecraft.launcher.Launcher;
-import net.minecraft.launcher.authentication.OldAuthentication;
-import net.minecraft.launcher.authentication.OldAuthentication.Response;
-import net.minecraft.launcher.authentication.OldAuthentication.StoredDetails;
+import net.minecraft.launcher.authentication.AuthenticationService;
+import net.minecraft.launcher.authentication.GameProfile;
 import net.minecraft.launcher.profile.Profile;
 import net.minecraft.launcher.profile.ProfileManager;
 import net.minecraft.launcher.updater.VersionManager;
@@ -24,6 +23,7 @@ public class LoggedInForm extends BaseLogInForm
   private final JButton playButton = new JButton("Play");
   private final JButton logOutButton = new JButton("Log Out");
   private final JLabel welcomeText = new JLabel("<html>OH NO PANIC! :(</html>");
+  private AuthenticationService previousAuthentication = null;
 
   public LoggedInForm(LoginContainerForm container) {
     super(container, "Play Game");
@@ -52,50 +52,45 @@ public class LoggedInForm extends BaseLogInForm
   public void checkLoginState() {
     boolean canPlay = true;
     boolean canLogOut = true;
-    OldAuthentication authentication = getLauncher().getAuthentication();
-    Response response = authentication.getLastSuccessfulResponse();
+    AuthenticationService authentication = getLauncher().getProfileManager().getSelectedProfile().getAuthentication();
 
     if (getLauncher().getGameLauncher().isWorking()) {
       canPlay = false;
       canLogOut = false;
     }
+
     if (getLauncher().getVersionManager().getVersions().size() <= 0) {
       canPlay = false;
     }
-    if (authentication.isAuthenticating()) {
-      canPlay = false;
-      canLogOut = false;
-    }
 
-    if (response != null) {
-      welcomeText.setText("<html>Welcome, <b>" + authentication.getLastSuccessfulResponse().getPlayerName() + "</b>!</html>");
+    welcomeText.setText("<html>Welcome, guest!</html>");
 
-      if (response.isOnline())
-        playButton.setText("Play");
-      else
-        playButton.setText("Play Offline");
-    }
-    else {
-      welcomeText.setText("<html>Welcome, guest!</html>");
+    if (authentication.isLoggedIn()) {
+      if (authentication.getSelectedProfile() == null) {
+        playButton.setText("Play Demo");
+      } else {
+        welcomeText.setText("<html>Welcome, <b>" + authentication.getSelectedProfile().getName() + "</b>!</html>");
+
+        if (authentication.canPlayOnline())
+          playButton.setText("Play");
+        else {
+          playButton.setText("Play Offline");
+        }
+      }
     }
 
     logOutButton.setEnabled(canLogOut);
     playButton.setEnabled(canPlay);
+
+    previousAuthentication = authentication;
   }
 
   public void onProfilesRefreshed(ProfileManager manager)
   {
     Profile profile = manager.getSelectedProfile();
 
-    if (profile.getAuthentication() != null) {
-      if (!profile.getAuthentication().equals(profile.getAuthentication()))
-        getLauncher().getAuthentication().clearLastSuccessfulResponse();
-    }
-    else {
-      getLauncher().getAuthentication().clearLastSuccessfulResponse();
-    }
-
-    getLoginContainer().checkLoginState();
+    if (profile.getAuthentication() != previousAuthentication)
+      getLoginContainer().checkLoginState();
   }
 
   public void actionPerformed(ActionEvent e)
@@ -108,7 +103,7 @@ public class LoggedInForm extends BaseLogInForm
         } } );
     }
     else if (e.getSource() == logOutButton) {
-      getLauncher().getAuthentication().clearLastSuccessfulResponse();
+      getLauncher().getProfileManager().getSelectedProfile().getAuthentication().logOut();
       getLoginContainer().checkLoginState();
     }
   }

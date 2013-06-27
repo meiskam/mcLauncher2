@@ -4,8 +4,9 @@ import java.awt.CardLayout;
 import java.awt.Dimension;
 import javax.swing.JPanel;
 import net.minecraft.launcher.Launcher;
-import net.minecraft.launcher.authentication.OldAuthentication;
-import net.minecraft.launcher.authentication.OldAuthentication.Response;
+import net.minecraft.launcher.authentication.AuthenticationService;
+import net.minecraft.launcher.profile.Profile;
+import net.minecraft.launcher.profile.ProfileManager;
 
 public class LoginContainerForm extends JPanel
 {
@@ -31,12 +32,12 @@ public class LoginContainerForm extends JPanel
   }
 
   public void checkLoginState() {
-    Response response = launcher.getAuthentication().getLastSuccessfulResponse();
+    AuthenticationService authentication = launcher.getProfileManager().getSelectedProfile().getAuthentication();
 
     notLoggedInForm.checkLoginState();
     loggedInForm.checkLoginState();
 
-    if (response != null)
+    if (authentication.isLoggedIn())
       layout.show(this, CARD_LOGGED_IN);
     else
       layout.show(this, CARD_NOT_LOGGED_IN);

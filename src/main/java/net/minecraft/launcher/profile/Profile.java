@@ -7,12 +7,15 @@ import net.minecraft.launcher.authentication.yggdrasil.YggdrasilAuthenticationSe
 public class Profile
 {
   public static final String DEFAULT_JRE_ARGUMENTS = "-Xmx1G";
+  public static final Resolution DEFAULT_RESOLUTION = new Resolution(854, 480);
+
   private AuthenticationService authentication = new YggdrasilAuthenticationService();
   private String name;
   private File gameDir;
   private String lastVersionId;
   private String javaDir;
   private String javaArgs;
+  private Resolution resolution;
 
   public Profile()
   {
@@ -26,6 +29,7 @@ public class Profile
     lastVersionId = copy.lastVersionId;
     javaDir = copy.javaDir;
     javaArgs = copy.javaArgs;
+    resolution = copy.resolution;
   }
 
   public Profile(String name) {
@@ -72,7 +76,35 @@ public class Profile
     return javaDir;
   }
 
+  public Resolution getResolution() {
+    return resolution;
+  }
+
+  public void setResolution(Resolution resolution) {
+    this.resolution = resolution;
+  }
+
   public AuthenticationService getAuthentication() {
     return authentication;
+  }
+  public static class Resolution {
+    private int width;
+    private int height;
+
+    public Resolution() {
+    }
+
+    public Resolution(int width, int height) {
+      this.width = width;
+      this.height = height;
+    }
+
+    public int getWidth() {
+      return width;
+    }
+
+    public int getHeight() {
+      return height;
+    }
   }
 }

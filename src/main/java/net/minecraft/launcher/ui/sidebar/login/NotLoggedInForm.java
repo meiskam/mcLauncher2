@@ -217,19 +217,29 @@ public class NotLoggedInForm extends BaseLogInForm
     }
   }
 
-  private void loginFailed(String error, final boolean verbose, final boolean mojangAccount) {
+  private void loginFailed(final String error, final boolean verbose, final boolean mojangAccount) {
     Launcher.getInstance().println("Could not log in: " + error);
 
     SwingUtilities.invokeLater(new Runnable()
     {
       public void run() {
-        if (verbose) {
-          String[] buttons = { "Forgot Password", "Okay" };
+        if (verbose)
+        {
           String url = mojangAccount ? LauncherConstants.URL_FORGOT_PASSWORD_MOJANG : LauncherConstants.URL_FORGOT_PASSWORD_MINECRAFT;
           String errorMessage = "";
-          errorMessage = errorMessage + "Sorry, but your username or password is incorrect!";
-          errorMessage = errorMessage + "\nPlease try again, and check your Caps Lock key is not turned on.";
-          errorMessage = errorMessage + "\nIf you're having trouble, try the 'Forgot Password' button or visit help.mojang.com";
+          String[] buttons;
+          if (StringUtils.containsIgnoreCase(error, "migrated"))
+          {
+            errorMessage = errorMessage + "Your account has been migrated to a Mojang account.";
+            errorMessage = errorMessage + "\nTo log in, please use your email address and not your minecraft name.";
+            buttons = new String[] { "Need help?", "Okay" };
+            url = LauncherConstants.URL_FORGOT_MIGRATED_EMAIL;
+          } else {
+            errorMessage = errorMessage + "Sorry, but your username or password is incorrect!";
+            errorMessage = errorMessage + "\nPlease try again, and check your Caps Lock key is not turned on.";
+            errorMessage = errorMessage + "\nIf you're having trouble, try the 'Forgot Password' button or visit help.mojang.com";
+            buttons = new String[] { "Forgot Password", "Okay" };
+          }
 
           int result = JOptionPane.showOptionDialog(getLauncher().getFrame(), errorMessage, "Could not log in", 0, 0, null, buttons, buttons[0]);
 
@@ -237,7 +247,7 @@ public class NotLoggedInForm extends BaseLogInForm
             try {
               OperatingSystem.openLink(new URI(url));
             } catch (URISyntaxException e) {
-              getLauncher().println("Couldn't open forgot password link. Please visit " + url + " manually.", e);
+              getLauncher().println("Couldn't open help link. Please visit " + url + " manually.", e);
             }
           }
         }

@@ -9,6 +9,8 @@ import java.awt.event.ItemListener;
 import java.io.File;
 import java.util.List;
 import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -22,6 +24,7 @@ import javax.swing.text.Document;
 import net.minecraft.launcher.Launcher;
 import net.minecraft.launcher.events.RefreshedVersionsListener;
 import net.minecraft.launcher.profile.Profile;
+import net.minecraft.launcher.profile.Profile.Resolution;
 import net.minecraft.launcher.updater.VersionManager;
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import net.minecraft.launcher.versions.ReleaseType;
@@ -35,6 +38,9 @@ public class ProfileInfoPanel extends JPanel
   private final JTextField profileName = new JTextField();
   private final JTextField gameDirField = new JTextField();
   private final JComboBox versionList = new JComboBox();
+  private final JCheckBox resolutionCustom = new JCheckBox("Resolution:");
+  private final JTextField resolutionWidth = new JTextField();
+  private final JTextField resolutionHeight = new JTextField();
 
   public ProfileInfoPanel(ProfileEditorPopup editor) {
     this.editor = editor;
@@ -89,6 +95,23 @@ public class ProfileInfoPanel extends JPanel
 
     constraints.gridy += 1;
 
+    JPanel resolutionPanel = new JPanel();
+    resolutionPanel.setLayout(new BoxLayout(resolutionPanel, 0));
+    resolutionPanel.add(resolutionWidth);
+    resolutionPanel.add(Box.createHorizontalStrut(5));
+    resolutionPanel.add(new JLabel("x"));
+    resolutionPanel.add(Box.createHorizontalStrut(5));
+    resolutionPanel.add(resolutionHeight);
+
+    add(resolutionCustom, constraints);
+    constraints.fill = 2;
+    constraints.weightx = 1.0D;
+    add(resolutionPanel, constraints);
+    constraints.weightx = 0.0D;
+    constraints.fill = 0;
+
+    constraints.gridy += 1;
+
     versionList.setRenderer(new VersionListRenderer());
   }
 
@@ -104,6 +127,13 @@ public class ProfileInfoPanel extends JPanel
       gameDirField.setText(editor.getLauncher().getWorkingDirectory().getAbsolutePath());
     }
     updateGameDirState();
+
+    Profile.Resolution resolution = editor.getProfile().getResolution();
+    resolutionCustom.setSelected(resolution != null);
+    if (resolution == null) resolution = Profile.DEFAULT_RESOLUTION;
+    resolutionWidth.setText(String.valueOf(resolution.getWidth()));
+    resolutionHeight.setText(String.valueOf(resolution.getHeight()));
+    updateResolutionState();
   }
 
   protected void addEventHandlers() {
@@ -151,6 +181,30 @@ public class ProfileInfoPanel extends JPanel
         ProfileInfoPanel.this.updateVersionSelection();
       }
     });
+    resolutionCustom.addItemListener(new ItemListener()
+    {
+      public void itemStateChanged(ItemEvent e) {
+        ProfileInfoPanel.this.updateResolutionState();
+      }
+    });
+    DocumentListener resolutionListener = new DocumentListener()
+    {
+      public void insertUpdate(DocumentEvent e) {
+        ProfileInfoPanel.this.updateResolution();
+      }
+
+      public void removeUpdate(DocumentEvent e)
+      {
+        ProfileInfoPanel.this.updateResolution();
+      }
+
+      public void changedUpdate(DocumentEvent e)
+      {
+        ProfileInfoPanel.this.updateResolution();
+      }
+    };
+    resolutionWidth.getDocument().addDocumentListener(resolutionListener);
+    resolutionHeight.getDocument().addDocumentListener(resolutionListener);
   }
 
   private void updateProfileName() {
@@ -166,6 +220,29 @@ public class ProfileInfoPanel extends JPanel
     } else {
       gameDirField.setEnabled(false);
       editor.getProfile().setGameDir(null);
+    }
+  }
+
+  private void updateResolutionState() {
+    if (resolutionCustom.isSelected()) {
+      resolutionWidth.setEnabled(true);
+      resolutionHeight.setEnabled(true);
+      updateResolution();
+    } else {
+      resolutionWidth.setEnabled(false);
+      resolutionHeight.setEnabled(false);
+      editor.getProfile().setResolution(null);
+    }
+  }
+
+  private void updateResolution() {
+    try {
+      int width = Integer.parseInt(resolutionWidth.getText());
+      int height = Integer.parseInt(resolutionHeight.getText());
+
+      editor.getProfile().setResolution(new Profile.Resolution(width, height));
+    } catch (NumberFormatException ignored) {
+      editor.getProfile().setResolution(null);
     }
   }
 

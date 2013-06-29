@@ -4,6 +4,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -30,6 +31,7 @@ import net.minecraft.launcher.process.JavaProcessLauncher;
 import net.minecraft.launcher.process.JavaProcessRunnable;
 import net.minecraft.launcher.process.LimitedCapacityList;
 import net.minecraft.launcher.profile.Profile;
+import net.minecraft.launcher.profile.Profile.Resolution;
 import net.minecraft.launcher.profile.ProfileManager;
 import net.minecraft.launcher.ui.LauncherPanel;
 import net.minecraft.launcher.ui.SidebarPanel;
@@ -47,6 +49,11 @@ import net.minecraft.launcher.versions.CompleteVersion;
 import net.minecraft.launcher.versions.ExtractRules;
 import net.minecraft.launcher.versions.Library;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.AgeFileFilter;
+import org.apache.commons.io.filefilter.DirectoryFileFilter;
+import org.apache.commons.io.filefilter.FileFilterUtils;
+import org.apache.commons.io.filefilter.IOFileFilter;
+import org.apache.commons.io.filefilter.PrefixFileFilter;
 import org.apache.commons.lang3.text.StrSubstitutor;
 
 public class GameLauncher
@@ -177,10 +184,13 @@ public class GameLauncher
       return;
     }
 
+    cleanOldNatives();
+
     nativeDir = new File(launcher.getWorkingDirectory(), "versions/" + version.getId() + "/" + version.getId() + "-natives-" + System.nanoTime());
     if (!nativeDir.isDirectory()) nativeDir.mkdirs();
     launcher.println("Unpacking natives to " + nativeDir);
-    try {
+    try
+    {
       unpackNatives(version, nativeDir);
     } catch (IOException e) {
       Launcher.getInstance().println("Couldn't unpack natives!", e);
@@ -235,13 +245,19 @@ public class GameLauncher
         processLauncher.addCommands(new String[] { "--proxyUser", proxyAuth.getUserName() });
         processLauncher.addCommands(new String[] { "--proxyPass", new String(proxyAuth.getPassword()) });
       }
+
     }
+
+    processLauncher.addCommands(launcher.getAdditionalArgs());
 
     if (selectedProfile.getAuthentication().getSelectedProfile() == null) {
       processLauncher.addCommands(new String[] { "--demo" });
     }
 
-    processLauncher.addCommands(launcher.getAdditionalArgs());
+    if (selectedProfile.getResolution() != null) {
+      processLauncher.addCommands(new String[] { "--width", String.valueOf(selectedProfile.getResolution().getWidth()) });
+      processLauncher.addCommands(new String[] { "--height", String.valueOf(selectedProfile.getResolution().getHeight()) });
+    }
     try
     {
       List<String> parts = processLauncher.getFullCommands();
@@ -304,7 +320,21 @@ public class GameLauncher
     return split;
   }
 
-  private void unpackNatives(CompleteVersion version, File targetDir) throws IOException {
+  private void cleanOldNatives() {
+    File root = new File(launcher.getWorkingDirectory(), "versions/");
+    launcher.println("Looking for old natives to clean up...");
+    IOFileFilter ageFilter = new AgeFileFilter(System.currentTimeMillis() - LauncherConstants.MAX_NATIVES_LIFE_IN_SECONDS);
+
+    for (File version : root.listFiles((FileFilter) DirectoryFileFilter.DIRECTORY))
+      for (File folder : version.listFiles((FileFilter) FileFilterUtils.and(new IOFileFilter[] { new PrefixFileFilter(version.getName() + "-natives-"), ageFilter }))) {
+        Launcher.getInstance().println("Deleting " + folder);
+
+        FileUtils.deleteQuietly(folder);
+      }
+  }
+
+  private void unpackNatives(CompleteVersion version, File targetDir) throws IOException
+  {
     OperatingSystem os = OperatingSystem.getCurrentPlatform();
     Collection<Library> libraries = version.getRelevantLibraries(os);
 

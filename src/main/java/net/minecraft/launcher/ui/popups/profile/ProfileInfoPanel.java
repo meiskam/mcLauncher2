@@ -7,7 +7,9 @@ import java.awt.Insets;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -25,6 +27,7 @@ import net.minecraft.launcher.Launcher;
 import net.minecraft.launcher.events.RefreshedVersionsListener;
 import net.minecraft.launcher.profile.Profile;
 import net.minecraft.launcher.profile.Profile.Resolution;
+import net.minecraft.launcher.updater.VersionFilter;
 import net.minecraft.launcher.updater.VersionManager;
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import net.minecraft.launcher.versions.ReleaseType;
@@ -41,6 +44,7 @@ public class ProfileInfoPanel extends JPanel
   private final JCheckBox resolutionCustom = new JCheckBox("Resolution:");
   private final JTextField resolutionWidth = new JTextField();
   private final JTextField resolutionHeight = new JTextField();
+  private final JCheckBox allowSnapshots = new JCheckBox("Enable experimental development versions (\"snapshots\")");
 
   public ProfileInfoPanel(ProfileEditorPopup editor) {
     this.editor = editor;
@@ -52,7 +56,7 @@ public class ProfileInfoPanel extends JPanel
     fillDefaultValues();
     addEventHandlers();
 
-    List<VersionSyncInfo> versions = editor.getLauncher().getVersionManager().getVersions();
+    List<VersionSyncInfo> versions = editor.getLauncher().getVersionManager().getVersions(editor.getProfile().getVersionFilter());
 
     if (versions.isEmpty())
       editor.getLauncher().getVersionManager().addRefreshedVersionsListener(this);
@@ -81,6 +85,16 @@ public class ProfileInfoPanel extends JPanel
     constraints.fill = 2;
     constraints.weightx = 1.0D;
     add(gameDirField, constraints);
+    constraints.weightx = 0.0D;
+    constraints.fill = 0;
+
+    constraints.gridy += 1;
+
+    constraints.fill = 2;
+    constraints.weightx = 1.0D;
+    constraints.gridwidth = 0;
+    add(allowSnapshots, constraints);
+    constraints.gridwidth = 1;
     constraints.weightx = 0.0D;
     constraints.fill = 0;
 
@@ -134,6 +148,8 @@ public class ProfileInfoPanel extends JPanel
     resolutionWidth.setText(String.valueOf(resolution.getWidth()));
     resolutionHeight.setText(String.valueOf(resolution.getHeight()));
     updateResolutionState();
+
+    allowSnapshots.setSelected(editor.getProfile().getVersionFilter().getTypes().contains(ReleaseType.SNAPSHOT));
   }
 
   protected void addEventHandlers() {
@@ -205,6 +221,34 @@ public class ProfileInfoPanel extends JPanel
     };
     resolutionWidth.getDocument().addDocumentListener(resolutionListener);
     resolutionHeight.getDocument().addDocumentListener(resolutionListener);
+
+    allowSnapshots.addItemListener(new ItemListener()
+    {
+      public void itemStateChanged(ItemEvent e) {
+        ProfileInfoPanel.this.updateCustomVersionFilter();
+      }
+    });
+  }
+
+  private void updateCustomVersionFilter() {
+    Profile profile = editor.getProfile();
+
+    if (allowSnapshots.isSelected()) {
+      if (profile.getAllowedReleaseTypes() == null) {
+        profile.setAllowedReleaseTypes(new HashSet<ReleaseType>(Profile.DEFAULT_RELEASE_TYPES));
+      }
+
+      profile.getAllowedReleaseTypes().add(ReleaseType.SNAPSHOT);
+    } else if (profile.getAllowedReleaseTypes() != null) {
+      profile.getAllowedReleaseTypes().remove(ReleaseType.SNAPSHOT);
+
+      if (profile.getAllowedReleaseTypes().equals(Profile.DEFAULT_RELEASE_TYPES)) {
+        profile.setAllowedReleaseTypes(null);
+      }
+    }
+
+    populateVersions(editor.getLauncher().getVersionManager().getVersions(editor.getProfile().getVersionFilter()));
+    editor.getLauncher().getVersionManager().removeRefreshedVersionsListener(this);
   }
 
   private void updateProfileName() {
@@ -280,7 +324,7 @@ public class ProfileInfoPanel extends JPanel
 
   public void onVersionsRefreshed(VersionManager manager)
   {
-    List<VersionSyncInfo> versions = manager.getVersions();
+    List<VersionSyncInfo> versions = manager.getVersions(editor.getProfile().getVersionFilter());
     populateVersions(versions);
     editor.getLauncher().getVersionManager().removeRefreshedVersionsListener(this);
   }

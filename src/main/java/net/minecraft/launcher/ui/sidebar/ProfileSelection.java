@@ -145,7 +145,7 @@ public class ProfileSelection extends SidebarGridForm
     }
 
     if (syncInfo == null) {
-      List<VersionSyncInfo> versions = launcher.getVersionManager().getVersions();
+      List<VersionSyncInfo> versions = launcher.getVersionManager().getVersions(launcher.getProfileManager().getSelectedProfile().getVersionFilter());
       if (!versions.isEmpty()) {
         syncInfo = (VersionSyncInfo)versions.get(0);
       }

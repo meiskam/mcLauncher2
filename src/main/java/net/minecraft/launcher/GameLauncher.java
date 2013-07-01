@@ -117,12 +117,13 @@ public class GameLauncher
     });
     launcher.println("Getting syncinfo for selected version");
 
-    String lastVersionId = launcher.getProfileManager().getSelectedProfile().getLastVersionId();
+    Profile profile = launcher.getProfileManager().getSelectedProfile();
+    String lastVersionId = profile.getLastVersionId();
     VersionSyncInfo syncInfo;
     if (lastVersionId != null)
       syncInfo = launcher.getVersionManager().getVersionSyncInfo(lastVersionId);
     else {
-      syncInfo = (VersionSyncInfo)launcher.getVersionManager().getVersions().get(0);
+      syncInfo = (VersionSyncInfo)launcher.getVersionManager().getVersions(profile.getVersionFilter()).get(0);
     }
 
     if (syncInfo == null) {

@@ -99,9 +99,10 @@ public class NotLoggedInForm extends BaseLogInForm
   public void checkLoginState()
   {
     boolean canLogIn = true;
+    Profile profile = getLauncher().getProfileManager().getSelectedProfile();
 
     if (getLauncher().getGameLauncher().isWorking()) canLogIn = false;
-    if (getLauncher().getVersionManager().getVersions().size() <= 0) canLogIn = false;
+    if (getLauncher().getVersionManager().getVersions(profile.getVersionFilter()).size() <= 0) canLogIn = false;
 
     playButton.setEnabled(canLogIn);
   }

@@ -343,7 +343,7 @@ public class GameLauncher
       Map<OperatingSystem, String> nativesPerOs = library.getNatives();
 
       if ((nativesPerOs != null) && (nativesPerOs.get(os) != null)) {
-        File file = new File(launcher.getWorkingDirectory(), library.getArtifactPath((String)nativesPerOs.get(os)));
+        File file = new File(launcher.getWorkingDirectory(), "libraries/" + library.getArtifactPath((String)nativesPerOs.get(os)));
         ZipFile zip = new ZipFile(file);
         ExtractRules extractRules = library.getExtractRules();
         try

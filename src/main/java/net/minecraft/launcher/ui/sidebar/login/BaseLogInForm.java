@@ -1,6 +1,7 @@
 package net.minecraft.launcher.ui.sidebar.login;
 
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import net.minecraft.launcher.Launcher;
 import net.minecraft.launcher.events.RefreshedProfilesListener;
 import net.minecraft.launcher.events.RefreshedVersionsListener;
@@ -41,5 +42,13 @@ public abstract class BaseLogInForm extends SidebarGridForm
 
   public Launcher getLauncher() {
     return launcher;
+  }
+
+  protected void saveAuthenticationDetails() {
+    try {
+      getLauncher().getProfileManager().saveProfiles();
+    } catch (IOException e) {
+      getLauncher().println("Couldn't save authentication details to profile", e);
+    }
   }
 }

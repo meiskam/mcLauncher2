@@ -113,4 +113,15 @@ public class LoadTestingAuthenticationService
   {
     return primary.guessPasswordFromSillyOldFormat(lastlogin);
   }
+
+  public void setRememberMe(boolean rememberMe)
+  {
+    primary.setRememberMe(rememberMe);
+    secondary.setRememberMe(rememberMe);
+  }
+
+  public boolean shouldRememberMe()
+  {
+    return primary.shouldRememberMe();
+  }
 }

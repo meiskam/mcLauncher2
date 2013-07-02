@@ -29,6 +29,7 @@ public abstract class BaseAuthenticationService
   private String username = null;
   private String password = null;
   private GameProfile selectedProfile = null;
+  private boolean shouldRememberMe = true;
 
   public boolean canLogIn()
   {
@@ -112,6 +113,10 @@ public abstract class BaseAuthenticationService
   {
     logOut();
 
+    if (credentials.containsKey(STORAGE_KEY_REMEMBER_ME)) {
+      setRememberMe(Boolean.getBoolean((String)credentials.get(STORAGE_KEY_REMEMBER_ME)));
+    }
+
     setUsername((String)credentials.get(STORAGE_KEY_USERNAME));
 
     if ((credentials.containsKey(STORAGE_KEY_PROFILE_NAME)) && (credentials.containsKey(STORAGE_KEY_PROFILE_ID)))
@@ -121,6 +126,11 @@ public abstract class BaseAuthenticationService
   public Map<String, String> saveForStorage()
   {
     Map<String, String> result = new HashMap<String, String>();
+
+    if (!shouldRememberMe()) {
+      result.put("rememberMe", Boolean.toString(false));
+      return result;
+    }
 
     if (getUsername() != null) {
       result.put(STORAGE_KEY_USERNAME, getUsername());
@@ -132,6 +142,16 @@ public abstract class BaseAuthenticationService
     }
 
     return result;
+  }
+
+  public boolean shouldRememberMe()
+  {
+    return shouldRememberMe;
+  }
+
+  public void setRememberMe(boolean rememberMe)
+  {
+    shouldRememberMe = rememberMe;
   }
 
   protected void setSelectedProfile(GameProfile selectedProfile) {

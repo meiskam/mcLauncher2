@@ -75,7 +75,6 @@ public class Library
 
   public String getArtifactPath(String classifier) {
     if (name == null) throw new IllegalStateException("Cannot get artifact path of empty/blank artifact");
-    String[] parts = name.split(":", 3);
     return String.format("%s/%s", new Object[] { getArtifactBaseDir(), getArtifactFilename(classifier) });
   }
 

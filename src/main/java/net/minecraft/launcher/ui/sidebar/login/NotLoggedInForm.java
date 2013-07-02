@@ -5,7 +5,6 @@ import java.awt.GridBagConstraints;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -56,7 +55,7 @@ public class NotLoggedInForm extends BaseLogInForm
     add(passwordLabel, constraints, 0, 1, 0, 1);
     add(passwordField, constraints, 1, 1, 1, 0);
 
-    ((JCheckBox)add(rememberMeCheckbox, constraints, 0, 2, 0, 2)).setEnabled(false);
+    add(rememberMeCheckbox, constraints, 0, 2, 0, 2);
 
     playButton.addActionListener(this);
     usernameField.addActionListener(this);
@@ -128,6 +127,8 @@ public class NotLoggedInForm extends BaseLogInForm
     Profile profile = manager.getSelectedProfile();
     AuthenticationService authentication = profile.getAuthentication();
 
+    rememberMeCheckbox.setSelected(profile.getAuthentication().shouldRememberMe());
+
     if ((authentication.isLoggedIn()) && (authentication.canPlayOnline())) {
       checkLoginState();
     } else if (!StringUtils.isBlank(authentication.getUsername())) {
@@ -156,6 +157,7 @@ public class NotLoggedInForm extends BaseLogInForm
     final AuthenticationService authentication = profile.getAuthentication();
 
     getLoginContainer().checkLoginState();
+    authentication.setRememberMe(rememberMeCheckbox.isSelected());
 
     getLauncher().getVersionManager().getExecutorService().submit(new Runnable()
     {
@@ -176,7 +178,7 @@ public class NotLoggedInForm extends BaseLogInForm
           }
 
           getLauncher().println("Logged in successfully");
-          NotLoggedInForm.this.saveAuthenticationDetails(profile);
+          saveAuthenticationDetails();
 
           if (launchOnSuccess)
             getLauncher().getGameLauncher().playGame();
@@ -203,17 +205,11 @@ public class NotLoggedInForm extends BaseLogInForm
           } else {
             NotLoggedInForm.this.loginFailed(ex.getMessage(), verbose, authentication.getUsername().contains("@"));
           }
+
+          saveAuthenticationDetails();
         }
       }
     });
-  }
-
-  private void saveAuthenticationDetails(Profile profile) {
-    try {
-      getLauncher().getProfileManager().saveProfiles();
-    } catch (IOException e) {
-      getLauncher().println("Couldn't save authentication details to profile", e);
-    }
   }
 
   private void loginFailed(final String error, final boolean verbose, final boolean mojangAccount) {

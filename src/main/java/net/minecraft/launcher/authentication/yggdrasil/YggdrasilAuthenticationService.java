@@ -198,6 +198,7 @@ public class YggdrasilAuthenticationService extends BaseAuthenticationService
   public Map<String, String> saveForStorage()
   {
     Map<String, String> result = super.saveForStorage();
+    if (!shouldRememberMe()) return result;
 
     if (StringUtils.isNotBlank(getAccessToken())) {
       result.put(STORAGE_KEY_ACCESS_TOKEN, getAccessToken());

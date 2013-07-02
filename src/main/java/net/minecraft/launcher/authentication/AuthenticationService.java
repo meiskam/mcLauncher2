@@ -10,6 +10,7 @@ public abstract interface AuthenticationService
   public static final String STORAGE_KEY_PROFILE_NAME = "displayName";
   public static final String STORAGE_KEY_PROFILE_ID = "uuid";
   public static final String STORAGE_KEY_USERNAME = "username";
+  public static final String STORAGE_KEY_REMEMBER_ME = "rememberMe";
 
   public abstract boolean canLogIn();
 
@@ -46,4 +47,8 @@ public abstract interface AuthenticationService
   public abstract void removeAuthenticationChangedListener(AuthenticationChangedListener paramAuthenticationChangedListener);
 
   public abstract String guessPasswordFromSillyOldFormat(File paramFile);
+
+  public abstract void setRememberMe(boolean paramBoolean);
+
+  public abstract boolean shouldRememberMe();
 }

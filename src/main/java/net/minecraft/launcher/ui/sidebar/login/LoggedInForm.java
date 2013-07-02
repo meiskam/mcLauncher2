@@ -103,6 +103,7 @@ public class LoggedInForm extends BaseLogInForm
     }
     else if (e.getSource() == logOutButton) {
       getLauncher().getProfileManager().getSelectedProfile().getAuthentication().logOut();
+      saveAuthenticationDetails();
       getLoginContainer().checkLoginState();
     }
   }

@@ -3,7 +3,6 @@ package net.minecraft.launcher.ui.sidebar;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.net.URL;
 import java.util.List;
@@ -27,7 +26,6 @@ public class StatusPanelForm extends SidebarGridForm
 
   public StatusPanelForm(Launcher launcher) {
     super("Service Status");
-    setMaximumSize(new Dimension(2147483647, 500));
     this.launcher = launcher;
 
     createInterface();

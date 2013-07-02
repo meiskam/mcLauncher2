@@ -1,7 +1,6 @@
 package net.minecraft.launcher.ui.sidebar;
 
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -44,7 +43,6 @@ public class ProfileSelection extends SidebarGridForm
   {
     super("Profile Selection");
     this.launcher = launcher;
-    setMaximumSize(new Dimension(2147483647, 300));
 
     profileList.setRenderer(new ProfileListRenderer());
     profileList.addItemListener(this);

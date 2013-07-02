@@ -21,8 +21,6 @@ public class SidebarPanel extends JPanel
   {
     this.launcher = launcher;
 
-    setPreferredSize(new Dimension(250, 1));
-
     int border = 4;
     setBorder(new EmptyBorder(border, border, border, border));
 
@@ -38,7 +36,7 @@ public class SidebarPanel extends JPanel
     add(profileSelection);
     add(serverStatus);
 
-    add(new Filler(new Dimension(0, 0), new Dimension(0, 0), new Dimension(2147483647, 2147483647)));
+    add(new Filler(new Dimension(0, 0), new Dimension(0, 32767), new Dimension(0, 32767)));
 
     add(loginForm);
   }

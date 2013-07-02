@@ -5,7 +5,7 @@ import java.net.URL;
 
 public class LauncherConstants
 {
-  public static final String VERSION_NAME = "1.0.5";
+  public static final String VERSION_NAME = "1.0.6";
   public static final int VERSION_NUMERIC = 3;
   public static final String URL_REGISTER = "https://account.mojang.com/register";
   public static final String URL_DOWNLOAD_BASE = "https://s3.amazonaws.com/Minecraft.Download/";

@@ -1,6 +1,5 @@
 package net.minecraft.launcher.ui.sidebar.login;
 
-import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridLayout;
@@ -27,7 +26,6 @@ public class LoggedInForm extends BaseLogInForm
 
   public LoggedInForm(LoginContainerForm container) {
     super(container, "Play Game");
-    setMaximumSize(new Dimension(2147483647, 300));
     createInterface();
   }
 

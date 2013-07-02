@@ -1,7 +1,6 @@
 package net.minecraft.launcher.ui.sidebar.login;
 
 import java.awt.CardLayout;
-import java.awt.Dimension;
 import javax.swing.JPanel;
 import net.minecraft.launcher.Launcher;
 import net.minecraft.launcher.authentication.AuthenticationService;
@@ -22,7 +21,6 @@ public class LoginContainerForm extends JPanel
     this.launcher = launcher;
     loggedInForm = new LoggedInForm(this);
     notLoggedInForm = new NotLoggedInForm(this);
-    setMaximumSize(new Dimension(2147483647, 300));
 
     setLayout(layout);
     add(loggedInForm, CARD_LOGGED_IN);

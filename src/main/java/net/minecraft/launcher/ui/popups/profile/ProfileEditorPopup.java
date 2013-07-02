@@ -1,7 +1,6 @@
 package net.minecraft.launcher.ui.popups.profile;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -103,7 +102,6 @@ public class ProfileEditorPopup extends JPanel
     JDialog dialog = new JDialog(launcher.getFrame(), "Profile Editor", true);
     ProfileEditorPopup editor = new ProfileEditorPopup(launcher, profile);
     dialog.add(editor);
-    dialog.setPreferredSize(new Dimension(450, 300));
     dialog.pack();
     dialog.setLocationRelativeTo(launcher.getFrame());
     dialog.setVisible(true);

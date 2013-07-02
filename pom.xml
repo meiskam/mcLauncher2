@@ -3,7 +3,7 @@
   <groupId>org.shininet.minecraft</groupId>
   <artifactId>mcLauncher2</artifactId>
   <packaging>jar</packaging>
-  <version>1.0.6</version>
+  <version>1.0.7</version>
   <name>launcher</name>
 
   <properties>

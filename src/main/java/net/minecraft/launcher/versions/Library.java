@@ -6,11 +6,11 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
-import net.minecraft.launcher.LauncherConstants;
 import net.minecraft.launcher.OperatingSystem;
 
 public class Library
 {
+  private static final String LIBRARY_DOWNLOAD_BASE = "https://s3.amazonaws.com/Minecraft.Download/libraries/";
   private String name;
   private List<OperatingSystem> os;
   private Map<OperatingSystem, String> natives;
@@ -65,7 +65,7 @@ public class Library
   public String getArtifactBaseDir() {
     if (name == null) throw new IllegalStateException("Cannot get artifact dir of empty/blank artifact");
     String[] parts = name.split(":", 3);
-    return String.format("libraries/%s/%s/%s", new Object[] { parts[0].replaceAll("\\.", "/"), parts[1], parts[2] });
+    return String.format("%s/%s/%s", new Object[] { parts[0].replaceAll("\\.", "/"), parts[1], parts[2] });
   }
 
   public String getArtifactPath() {
@@ -99,6 +99,6 @@ public class Library
   public String getDownloadUrl()
   {
     if (url != null) return url;
-    return LauncherConstants.URL_DOWNLOAD_BASE;
+    return LIBRARY_DOWNLOAD_BASE;
   }
 }

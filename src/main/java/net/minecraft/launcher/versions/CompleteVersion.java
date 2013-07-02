@@ -25,6 +25,8 @@ public class CompleteVersion
   private List<Library> libraries;
   private String mainClass;
   private int minimumLauncherVersion;
+  private String incompatibilityReason;
+  private List<Rule> rules;
 
   public CompleteVersion()
   {
@@ -107,12 +109,11 @@ public class CompleteVersion
     this.mainClass = mainClass;
   }
 
-  public Collection<Library> getRelevantLibraries(OperatingSystem os) {
+  public Collection<Library> getRelevantLibraries() {
     List<Library> result = new ArrayList<Library>();
 
     for (Library library : libraries) {
-      List<OperatingSystem> restrictedOperatingSystems = library.getRestrictedOperatingSystems();
-      if ((restrictedOperatingSystems == null) || (restrictedOperatingSystems.contains(os))) {
+      if (library.appliesToCurrentEnvironment()) {
         result.add(library);
       }
     }
@@ -121,7 +122,7 @@ public class CompleteVersion
   }
 
   public Collection<File> getClassPath(OperatingSystem os, File base) {
-    Collection<Library> libraries = getRelevantLibraries(os);
+    Collection<Library> libraries = getRelevantLibraries();
     Collection<File> result = new ArrayList<File>();
 
     for (Library library : libraries) {
@@ -136,7 +137,7 @@ public class CompleteVersion
   }
 
   public Collection<String> getExtractFiles(OperatingSystem os) {
-    Collection<Library> libraries = getRelevantLibraries(os);
+    Collection<Library> libraries = getRelevantLibraries();
     Collection<String> result = new ArrayList<String>();
 
     for (Library library : libraries) {
@@ -153,7 +154,7 @@ public class CompleteVersion
   public Set<String> getRequiredFiles(OperatingSystem os) {
     Set<String> neededFiles = new HashSet<String>();
 
-    for (Library library : getRelevantLibraries(os)) {
+    for (Library library : getRelevantLibraries()) {
       if (library.getNatives() != null) {
         String natives = (String)library.getNatives().get(os);
         if (natives != null) neededFiles.add("libraries/" + library.getArtifactPath(natives)); 
@@ -168,7 +169,7 @@ public class CompleteVersion
   public Set<Downloadable> getRequiredDownloadables(OperatingSystem os, Proxy proxy, File targetDirectory, boolean ignoreLocalFiles) throws MalformedURLException {
     Set<Downloadable> neededFiles = new HashSet<Downloadable>();
 
-    for (Library library : getRelevantLibraries(os)) {
+    for (Library library : getRelevantLibraries()) {
       String file = null;
 
       if (library.getNatives() != null) {
@@ -210,5 +211,21 @@ public class CompleteVersion
 
   public void setMinimumLauncherVersion(int minimumLauncherVersion) {
     this.minimumLauncherVersion = minimumLauncherVersion;
+  }
+
+  public boolean appliesToCurrentEnvironment() {
+    if (rules == null) return true;
+    Rule.Action lastAction = Rule.Action.DISALLOW;
+
+    for (Rule rule : rules) {
+      Rule.Action action = rule.getAppliedAction();
+      if (action != null) lastAction = action;
+    }
+
+    return lastAction == Rule.Action.ALLOW;
+  }
+
+  public String getIncompatibilityReason() {
+    return incompatibilityReason;
   }
 }

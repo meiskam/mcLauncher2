@@ -1,7 +1,5 @@
 package net.minecraft.launcher.versions;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -12,7 +10,7 @@ public class Library
 {
   private static final String LIBRARY_DOWNLOAD_BASE = "https://s3.amazonaws.com/Minecraft.Download/libraries/";
   private String name;
-  private List<OperatingSystem> os;
+  private List<Rule> rules;
   private Map<OperatingSystem, String> natives;
   private ExtractRules extract;
   private String url;
@@ -31,12 +29,6 @@ public class Library
     return name;
   }
 
-  public Library addRestriction(OperatingSystem[] operatingSystems) {
-    if (os == null) os = new ArrayList<OperatingSystem>();
-    if (operatingSystems != null) Collections.addAll(os, operatingSystems);
-    return this;
-  }
-
   public Library addNative(OperatingSystem operatingSystem, String name) {
     if ((operatingSystem == null) || (!operatingSystem.isSupported())) throw new IllegalArgumentException("Cannot add native for unsupported OS");
     if ((name == null) || (name.length() == 0)) throw new IllegalArgumentException("Cannot add native for null or empty name");
@@ -45,8 +37,20 @@ public class Library
     return this;
   }
 
-  public List<OperatingSystem> getRestrictedOperatingSystems() {
-    return os;
+  public List<Rule> getRules() {
+    return rules;
+  }
+
+  public boolean appliesToCurrentEnvironment() {
+    if (rules == null) return true;
+    Rule.Action lastAction = Rule.Action.DISALLOW;
+
+    for (Rule rule : rules) {
+      Rule.Action action = rule.getAppliedAction();
+      if (action != null) lastAction = action;
+    }
+
+    return lastAction == Rule.Action.ALLOW;
   }
 
   public Map<OperatingSystem, String> getNatives() {
@@ -92,7 +96,7 @@ public class Library
 
   public String toString()
   {
-    return "Library{name='" + name + '\'' + ", os=" + os + ", natives=" + natives + ", extract=" + extract + '}';
+    return "Library{name='" + name + '\'' + ", rules=" + rules + ", natives=" + natives + ", extract=" + extract + '}';
   }
 
   public String getDownloadUrl()

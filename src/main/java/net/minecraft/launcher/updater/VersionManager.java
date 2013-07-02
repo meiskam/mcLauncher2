@@ -244,9 +244,7 @@ public class VersionManager
     File baseDirectory = ((LocalVersionList)localVersionList).getBaseDirectory();
     Proxy proxy = ((RemoteVersionList)remoteVersionList).getProxy();
 
-    if ((!syncInfo.isInstalled()) || (!syncInfo.isUpToDate())) {
-      job.addDownloadables(version.getRequiredDownloadables(OperatingSystem.getCurrentPlatform(), proxy, baseDirectory, false));
-    }
+    job.addDownloadables(version.getRequiredDownloadables(OperatingSystem.getCurrentPlatform(), proxy, baseDirectory, false));
 
     String jarFile = "versions/" + version.getId() + "/" + version.getId() + ".jar";
     job.addDownloadables(new Downloadable[] { new Downloadable(proxy, new URL(LauncherConstants.URL_DOWNLOAD_BASE + jarFile), new File(baseDirectory, jarFile), false) });
@@ -291,7 +289,9 @@ public class VersionManager
                 if (localMd5.equals(etag)) continue;
               }
             }
-            result.add(new Downloadable(proxy, new URL(LauncherConstants.URL_RESOURCE_BASE + key), file, false));
+            Downloadable downloadable = new Downloadable(proxy, new URL(LauncherConstants.URL_RESOURCE_BASE + key), file, false);
+            downloadable.setExpectedSize(size);
+            result.add(downloadable);
           }
         }
       }

@@ -60,7 +60,7 @@ public class CrashReportTab extends JPanel
   private class CrashInfoPane extends JPanel
     implements ActionListener
   {
-    public static final String INFO_NORMAL = "<html><div style='width: 100%'><p><b>Uhoh, it looks like the game has crashed! Sorry for the inconvenience :(</b></p><p>Using magic and love, we've managed to gather some details about the crash and we can hopefully try to fix it if you report it to us.</p><p>You can see the full report below, and we'd really appreciate it if you send it to us to take a look at.</p></div></html>";
+    public static final String INFO_NORMAL = "<html><div style='width: 100%'><p><b>Uhoh, it looks like the game has crashed! Sorry for the inconvenience :(</b></p><p>Using magic and love, we've managed to gather some details about the crash and we can hopefully try to fix it if you report it to us.</p><p>You can see the full report below, and we'd really appreciate it if you send it to us to take a look at. Click 'Report to Mojang' and copy paste the information from below into the issue.</p></div></html>";
     public static final String INFO_MODDED = "<html><div style='width: 100%'><p><b>Uhoh, it looks like the game has crashed! Sorry for the inconvenience :(</b></p><p>We think your game may be modded, and as such we can't accept this crash report.</p><p>However, if you do indeed use mods, please send this to the mod authors to take a look at!</p></div></html>";
     private final JButton submitButton = new JButton("Report to Mojang");
     private final JButton openFileButton = new JButton("Open report file");

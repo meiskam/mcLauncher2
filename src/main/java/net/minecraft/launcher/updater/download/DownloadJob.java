@@ -13,10 +13,12 @@ import net.minecraft.launcher.Launcher;
 public class DownloadJob
 {
   private static final int MAX_ATTEMPTS_PER_FILE = 5;
+  private static final int ASSUMED_AVERAGE_FILE_SIZE = 5242880;
   private final Queue<Downloadable> remainingFiles = new ConcurrentLinkedQueue<Downloadable>();
   private final List<Downloadable> allFiles = Collections.synchronizedList(new ArrayList<Downloadable>());
   private final List<Downloadable> failures = Collections.synchronizedList(new ArrayList<Downloadable>());
   private final List<Downloadable> successful = Collections.synchronizedList(new ArrayList<Downloadable>());
+  private final List<ProgressContainer> progressContainers = Collections.synchronizedList(new ArrayList<ProgressContainer>());
   private final DownloadListener listener;
   private final String name;
   private final boolean ignoreFailures;
@@ -41,6 +43,16 @@ public class DownloadJob
 
     allFiles.addAll(downloadables);
     remainingFiles.addAll(downloadables);
+
+    for (Downloadable downloadable : downloadables) {
+      progressContainers.add(downloadable.getMonitor());
+      if (downloadable.getExpectedSize() == 0L)
+        downloadable.getMonitor().setTotal(ASSUMED_AVERAGE_FILE_SIZE);
+      else {
+        downloadable.getMonitor().setTotal(downloadable.getExpectedSize());
+      }
+      downloadable.getMonitor().setJob(this);
+    }
   }
 
   public void addDownloadables(Downloadable[] downloadables) {
@@ -49,6 +61,13 @@ public class DownloadJob
     for (Downloadable downloadable : downloadables) {
       allFiles.add(downloadable);
       remainingFiles.add(downloadable);
+      progressContainers.add(downloadable.getMonitor());
+      if (downloadable.getExpectedSize() == 0L)
+        downloadable.getMonitor().setTotal(ASSUMED_AVERAGE_FILE_SIZE);
+      else {
+        downloadable.getMonitor().setTotal(downloadable.getExpectedSize());
+      }
+      downloadable.getMonitor().setJob(this);
     }
   }
 
@@ -91,8 +110,6 @@ public class DownloadJob
           Launcher.getInstance().println("Couldn't download " + downloadable.getUrl() + " for job '" + name + "'", t);
           remainingFiles.add(downloadable);
         }
-
-        listener.onDownloadJobProgressChanged(this);
       }
     }
     if (remainingThreads.decrementAndGet() <= 0)
@@ -124,10 +141,23 @@ public class DownloadJob
     return name;
   }
 
+  public void updateProgress() {
+    listener.onDownloadJobProgressChanged(this);
+  }
+
   public float getProgress() {
-    float max = allFiles.size();
-    if (max == 0.0F) return 1.0F;
-    float done = successful.size();
-    return done / max;
+    float current = 0.0F;
+    float total = 0.0F;
+
+    synchronized (progressContainers) {
+      for (ProgressContainer progress : progressContainers) {
+        total += (float)progress.getTotal();
+        current += (float)progress.getCurrent();
+      }
+    }
+
+    float result = -1.0F;
+    if (total > 0.0F) result = current / total;
+    return result;
   }
 }

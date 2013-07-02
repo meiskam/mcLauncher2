@@ -5,8 +5,8 @@ import java.net.URL;
 
 public class LauncherConstants
 {
-  public static final String VERSION_NAME = "1.0.7";
-  public static final int VERSION_NUMERIC = 3;
+  public static final String VERSION_NAME = "1.0.8";
+  public static final int VERSION_NUMERIC = 4;
   public static final String URL_REGISTER = "https://account.mojang.com/register";
   public static final String URL_DOWNLOAD_BASE = "https://s3.amazonaws.com/Minecraft.Download/";
   public static final String URL_RESOURCE_BASE = "https://s3.amazonaws.com/Minecraft.Resources/";
@@ -23,6 +23,7 @@ public class LauncherConstants
   public static final String URL_FORGOT_PASSWORD_MINECRAFT = "https://minecraft.net/resetpassword";
   public static final String URL_FORGOT_MIGRATED_EMAIL = "http://help.mojang.com/customer/portal/articles/1205055-minecraft-launcher-error---migrated-account";
   public static final int MAX_NATIVES_LIFE_IN_SECONDS = 3600;
+  public static final String DEFAULT_VERSION_INCOMPATIBILITY_REASON = "This version is incompatible with your computer. Please try another one by going into Edit Profile and selecting one through the dropdown. Sorry!";
 
   public static URL constantURL(String input)
   {

@@ -112,7 +112,7 @@ public class VersionListTab extends JScrollPane
         if ((version instanceof CompleteVersion)) {
           CompleteVersion complete = (CompleteVersion)version;
           int total = complete.getLibraries().size();
-          int relevant = complete.getRelevantLibraries(OperatingSystem.getCurrentPlatform()).size();
+          int relevant = complete.getRelevantLibraries().size();
           if (total == relevant) {
             return Integer.valueOf(total);
           }

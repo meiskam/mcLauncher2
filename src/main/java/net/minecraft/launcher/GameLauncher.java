@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import javax.swing.JOptionPane;
 import javax.swing.JProgressBar;
 import javax.swing.SwingUtilities;
 import net.minecraft.launcher.authentication.AuthenticationService;
@@ -139,6 +140,15 @@ public class GameLauncher
         version = launcher.getVersionManager().getLatestCompleteVersion(syncInfo);
       } catch (IOException e) {
         Launcher.getInstance().println("Couldn't get complete version info for " + syncInfo.getLatestVersion(), e);
+        setWorking(false);
+        return;
+      }
+
+      if (!version.appliesToCurrentEnvironment()) {
+        String reason = version.getIncompatibilityReason();
+        if (reason == null) reason = LauncherConstants.DEFAULT_VERSION_INCOMPATIBILITY_REASON;
+        Launcher.getInstance().println("Version " + version.getId() + " is incompatible with current environment: " + reason);
+        JOptionPane.showMessageDialog(launcher.getFrame(), reason, "Cannot play game", 0);
         setWorking(false);
         return;
       }
@@ -337,7 +347,7 @@ public class GameLauncher
   private void unpackNatives(CompleteVersion version, File targetDir) throws IOException
   {
     OperatingSystem os = OperatingSystem.getCurrentPlatform();
-    Collection<Library> libraries = version.getRelevantLibraries(os);
+    Collection<Library> libraries = version.getRelevantLibraries();
 
     for (Library library : libraries) {
       Map<OperatingSystem, String> nativesPerOs = library.getNatives();
@@ -495,11 +505,16 @@ public class GameLauncher
 
   protected float getProgress() {
     synchronized (lock) {
-      float max = jobs.size();
+      float max = 0.0F;
       float result = 0.0F;
 
       for (DownloadJob job : jobs) {
-        result += job.getProgress();
+        float progress = job.getProgress();
+
+        if (progress >= 0.0F) {
+          result += progress;
+          max += 1.0F;
+        }
       }
 
       return result / max;

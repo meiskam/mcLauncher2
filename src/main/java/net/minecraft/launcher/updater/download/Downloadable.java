@@ -21,15 +21,28 @@ public class Downloadable
   private final File target;
   private final boolean forceDownload;
   private final Proxy proxy;
+  private final ProgressContainer monitor;
   private int numAttempts;
-  private boolean finished;
+  private long expectedSize = 0L;
 
-  public Downloadable(Proxy proxy, URL remoteFile, File localFile, boolean forceDownload)
-  {
+  public Downloadable(Proxy proxy, URL remoteFile, File localFile, boolean forceDownload) {
     this.proxy = proxy;
     url = remoteFile;
     target = localFile;
     this.forceDownload = forceDownload;
+    monitor = new ProgressContainer();
+  }
+
+  public ProgressContainer getMonitor() {
+    return monitor;
+  }
+
+  public long getExpectedSize() {
+    return expectedSize;
+  }
+
+  public void setExpectedSize(long expectedSize) {
+    this.expectedSize = expectedSize;
   }
 
   public String download() throws IOException
@@ -55,7 +68,13 @@ public class Downloadable
       if (status == 304)
         return "Used own copy as it matched etag";
       if (status / 100 == 2) {
-        InputStream inputStream = connection.getInputStream();
+        if (expectedSize == 0L)
+          monitor.setTotal(connection.getContentLength());
+        else {
+          monitor.setTotal(expectedSize);
+        }
+
+        InputStream inputStream = new MonitoringInputStream(connection.getInputStream(), monitor);
         FileOutputStream outputStream = new FileOutputStream(target);
         String md5 = copyAndDigest(inputStream, outputStream);
         String etag = getEtag(connection);
